@@ -82,15 +82,15 @@ targets:
       replacepattern: >-
         variable${1}"JAVA11_VERSION"${2}{${3}${4}${5}default${6}= "{{ source "lastVersion" }}"
     scmid: default
-  setJDK11VersionWindowsNanoserver1809:
-    name: "Bump JDK11 version on Windows Nanoserver 1809 image"
+  setJDK11VersionWindowsNanoserver:
+    name: "Bump JDK11 version on Windows Nanoserver image"
     kind: yaml
     spec:
       file: build-windows.yaml
       key: $.services.jdk11-nanoserver.build.args.JAVA_VERSION
     scmid: default
-  setJDK11VersionWindowsServerLtsc2019:
-    name: "Bump JDK11 version on Windows Server LTSC 2019 image"
+  setJDK11VersionWindowsServerLtsc:
+    name: "Bump JDK11 version on Windows Server LTSC image"
     kind: yaml
     spec:
       file: build-windows.yaml
