@@ -10,11 +10,11 @@ export BUILDKIT_PROGRESS=plain
 current_arch := $(shell uname -m)
 export ARCH ?= $(shell case $(current_arch) in (x86_64) echo "amd64" ;; (i386) echo "386";; (aarch64|arm64) echo "arm64" ;; (armv6*) echo "arm/v6";; (armv7*) echo "arm/v7";; (s390*|riscv*|ppc64le) echo $(current_arch);; (*) echo "UNKNOWN-CPU";; esac)
 
-IMAGE_NAME:=jenkins4eval/agent
-
 # Set to the path of a specific test suite to restrict execution only to this
-# default is "all test suites in the "tests/" directory
-TEST_SUITES ?= $(CURDIR)/tests
+# Set their value to "skip" to skip corresponding tests
+# default is "all test suites in the "tests/" directories
+TEST_SUITES_AGENT ?= $(CURDIR)/tests/tests_agent.bats
+TEST_SUITES_INBOUND_AGENT ?= $(CURDIR)/tests/tests_inbound-agent.bats
 
 ##### Macros
 ## Check the presence of a CLI in the current PATH
@@ -42,6 +42,7 @@ build: check-reqs
 
 build-%:
 	@$(call check_image,$*)
+	@echo "== building $*"
 	@set -x; $(bake_base_cli) --set '*.platform=linux/$(ARCH)' '$*'
 
 show:
@@ -59,7 +60,7 @@ prepare-test: bats check-reqs
 
 ## Define bats options based on environment
 # common flags for all tests
-bats_flags := $(TEST_SUITES)
+bats_flags := ""
 # if DISABLE_PARALLEL_TESTS true, then disable parallel execution
 ifneq (true,$(DISABLE_PARALLEL_TESTS))
 # If the GNU 'parallel' command line is absent, then disable parallel execution
@@ -75,9 +76,14 @@ test-%: prepare-test
 	@$(call check_image,$*)
 # Ensure that the image is built
 	@make --silent build-$*
-# Execute the test harness and write result to a TAP file
+	@echo "== testing $*"
 	set -x
-	IMAGE=$* bats/bin/bats $(bats_flags) | tee target/results-$*.tap
+	@if [[ $* == agent_* ]] && [[ $(TEST_SUITES_AGENT) != skip ]]; then \
+		IMAGE=$* bats/bin/bats $(TEST_SUITES_AGENT) $(bats_flags) | tee target/results-$*.tap; \
+	fi
+	@if [[ $* == inbound-agent_* ]] && [[ $(TEST_SUITES_INBOUND_AGENT) != skip ]]; then \
+		IMAGE=$* bats/bin/bats $(TEST_SUITES_INBOUND_AGENT) $(bats_flags) | tee target/results-$*.tap; \
+	fi
 # convert TAP to JUNIT
 	docker run --rm -v "$(CURDIR)":/usr/src/app -w /usr/src/app node:16-alpine \
 		sh -c "npm install tap-xunit -g && cat target/results-$*.tap | tap-xunit --package='jenkinsci.docker.$*' > target/junit-results-$*.xml"
