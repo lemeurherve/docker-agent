@@ -29,7 +29,8 @@ FROM eclipse-temurin:"${JAVA_VERSION}"-jdk-windowsservercore-"${TOOLS_WINDOWS_VE
 
 FROM mcr.microsoft.com/powershell:nanoserver-"${TOOLS_WINDOWS_VERSION}" AS pwsh-source
 
-FROM mcr.microsoft.com/windows/nanoserver:"${WINDOWS_VERSION_TAG}"
+## Agent image target
+FROM mcr.microsoft.com/windows/nanoserver:"${WINDOWS_VERSION_TAG}" AS agent
 
 ARG JAVA_HOME="C:\openjdk-17"
 ENV PSHOME="C:\Program Files\PowerShell"
@@ -44,8 +45,8 @@ COPY --from=pwsh-source $PSHOME $PSHOME
 SHELL ["pwsh.exe", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
 USER ContainerAdministrator
 
-ARG GIT_VERSION=2.43.0
-ARG GIT_PATCH_VERSION=1
+ARG GIT_VERSION=2.42.0
+ARG GIT_PATCH_VERSION=2
 RUN [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 ; `
     # The patch "windows.1" always have a different URL than the subsequent patch (ZIP filename is different)
     if($env:GIT_PATCH_VERSION -eq 1) { $url = $('https://github.com/git-for-windows/git/releases/download/v{0}.windows.{1}/MinGit-{0}-64-bit.zip' -f $env:GIT_VERSION, $env:GIT_PATCH_VERSION); } `
@@ -114,3 +115,19 @@ LABEL `
     org.opencontainers.image.url="https://www.jenkins.io/" `
     org.opencontainers.image.source="https://github.com/jenkinsci/docker-agent" `
     org.opencontainers.image.licenses="MIT"
+
+## Inbound Agent image target
+FROM agent AS inbound-agent
+
+COPY jenkins-agent.ps1 C:/ProgramData/Jenkins
+
+LABEL `
+    org.opencontainers.image.vendor="Jenkins project" `
+    org.opencontainers.image.title="Official Jenkins Inbound Agent Base Docker image" `
+    org.opencontainers.image.description="This is an image for Jenkins agents using TCP or WebSockets to establish inbound connection to the Jenkins controller" `
+    org.opencontainers.image.version="${VERSION}" `
+    org.opencontainers.image.url="https://www.jenkins.io/" `
+    org.opencontainers.image.source="https://github.com/jenkinsci/docker-agent-inbound" `
+    org.opencontainers.image.licenses="MIT"
+
+ENTRYPOINT ["pwsh.exe", "-f", "C:/ProgramData/Jenkins/jenkins-agent.ps1"]
