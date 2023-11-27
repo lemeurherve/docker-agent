@@ -82,6 +82,71 @@ Test-CommandExists "docker"
 Test-CommandExists "docker-compose"
 Test-CommandExists "yq"
 
+function Test-Image {
+    param (
+        $ImageName
+    )
+
+    Write-Host "= TEST: Testing image ${ImageName}:"
+
+    $env:AGENT_IMAGE = $ImageName
+    $serviceName = $ImageName.SubString(0, $ImageName.IndexOf('-'))
+    $env:BUILD_CONTEXT = Invoke-Expression "$baseDockerCmd config" 2>$null |  yq -r ".services.${serviceName}.build.context"
+    $env:VERSION = "$RemotingVersion-$BuildNumber"
+
+    if(Test-Path ".\target\$ImageName") {
+        Remove-Item -Recurse -Force ".\target\$ImageName"
+    }
+    New-Item -Path ".\target\$ImageName" -Type Directory | Out-Null
+    $configuration.TestResult.OutputPath = ".\target\$ImageName\junit-results.xml"
+    $TestResults = Invoke-Pester -Configuration $configuration
+    if ($TestResults.FailedCount -gt 0) {
+        Write-Host "There were $($TestResults.FailedCount) failed tests in $ImageName"
+        $testFailed = $true
+    } else {
+        Write-Host "There were $($TestResults.PassedCount) passed tests out of $($TestResults.TotalCount) in $ImageName"
+    }
+    Remove-Item env:\AGENT_IMAGE
+    Remove-Item env:\BUILD_CONTEXT
+    Remove-Item env:\VERSION
+}
+
+function Publish-Image {
+    param (
+        [String] $Build,
+        [String] $ImageName
+    )
+    if ($DryRun) {
+        Write-Host "= PUBLISH: (dry-run) docker tag then publish '$Build $ImageName'"
+    } else {
+        Write-Host "= PUBLISH: Tagging $Build => full name = $ImageName"
+        docker tag "$Build" "$ImageName"
+
+        Write-Host "= PUBLISH: Publishing $ImageName..."
+        docker push "$ImageName"
+    }
+}
+
+
+if($target -eq "publish") {
+    # Only fail the run afterwards in case of any issues when publishing the docker images
+    $publishFailed = 0
+    foreach($b in $builds.Keys) {
+        foreach($tag in $Builds[$b]['Tags']) {
+            Publish-Image "$b" "${Organization}/${Repository}:${tag}"
+            if($lastExitCode -ne 0) {
+                $publishFailed = 1
+            }
+        }
+    }
+
+    # Fail if any issues when publising the docker images
+    if($publishFailed -ne 0) {
+        Write-Error "Publish failed!"
+        exit 1
+    }
+}
+
 $baseDockerCmd = 'docker-compose --file=build-windows.yaml'
 $baseDockerBuildCmd = '{0} build --parallel --pull' -f $baseDockerCmd
 
@@ -119,35 +184,6 @@ Write-Host "= BUILD: Finished building all images."
 
 if($lastExitCode -ne 0) {
     exit $lastExitCode
-}
-
-function Test-Image {
-    param (
-        $ImageName
-    )
-
-    Write-Host "= TEST: Testing image ${ImageName}:"
-
-    $env:AGENT_IMAGE = $ImageName
-    $serviceName = $ImageName.SubString(0, $ImageName.IndexOf('-'))
-    $env:BUILD_CONTEXT = Invoke-Expression "$baseDockerCmd config" 2>$null |  yq -r ".services.${serviceName}.build.context"
-    $env:VERSION = "$RemotingVersion-$BuildNumber"
-
-    if(Test-Path ".\target\$ImageName") {
-        Remove-Item -Recurse -Force ".\target\$ImageName"
-    }
-    New-Item -Path ".\target\$ImageName" -Type Directory | Out-Null
-    $configuration.TestResult.OutputPath = ".\target\$ImageName\junit-results.xml"
-    $TestResults = Invoke-Pester -Configuration $configuration
-    if ($TestResults.FailedCount -gt 0) {
-        Write-Host "There were $($TestResults.FailedCount) failed tests in $ImageName"
-        $testFailed = $true
-    } else {
-        Write-Host "There were $($TestResults.PassedCount) passed tests out of $($TestResults.TotalCount) in $ImageName"
-    }
-    Remove-Item env:\AGENT_IMAGE
-    Remove-Item env:\BUILD_CONTEXT
-    Remove-Item env:\VERSION
 }
 
 if($target -eq "test") {
@@ -194,42 +230,6 @@ if($target -eq "test") {
         } else {
             Write-Host "= TEST: stage passed!"
         }
-    }
-}
-
-function Publish-Image {
-    param (
-        [String] $Build,
-        [String] $ImageName
-    )
-    if ($DryRun) {
-        Write-Host "= PUBLISH: (dry-run) docker tag then publish '$Build $ImageName'"
-    } else {
-        Write-Host "= PUBLISH: Tagging $Build => full name = $ImageName"
-        docker tag "$Build" "$ImageName"
-
-        Write-Host "= PUBLISH: Publishing $ImageName..."
-        docker push "$ImageName"
-    }
-}
-
-
-if($target -eq "publish") {
-    # Only fail the run afterwards in case of any issues when publishing the docker images
-    $publishFailed = 0
-    foreach($b in $builds.Keys) {
-        foreach($tag in $Builds[$b]['Tags']) {
-            Publish-Image "$b" "${Organization}/${Repository}:${tag}"
-            if($lastExitCode -ne 0) {
-                $publishFailed = 1
-            }
-        }
-    }
-
-    # Fail if any issues when publising the docker images
-    if($publishFailed -ne 0) {
-        Write-Error "Publish failed!"
-        exit 1
     }
 }
 
