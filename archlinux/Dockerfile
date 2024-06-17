@@ -20,7 +20,8 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #  THE SOFTWARE.
 
-FROM archlinux:base-20240101.0.204074 AS jre-build
+ARG ARCHLINUX_RELEASE=base-20240101.0.204074
+FROM archlinux:"${ARCHLINUX_RELEASE}" AS jre-build
 
 # This Build ARG is populated by Docker
 # Ref. https://docs.docker.com/engine/reference/builder/#automatic-platform-args-in-the-global-scope

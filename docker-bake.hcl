@@ -96,6 +96,10 @@ variable "ALPINE_SHORT_TAG" {
   default = regex_replace(ALPINE_FULL_TAG, "\\.\\d+$", "")
 }
 
+variable "ARCHLINUX_RELEASE" {
+  default = "base-20240101.0.204074"
+}
+
 variable "DEBIAN_RELEASE" {
   default = "bookworm-20240612"
 }
