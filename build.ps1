@@ -10,8 +10,6 @@ Param(
     # Windows flavor and windows version to build
     [String] $ImageType = 'nanoserver-ltsc2019',
     [String] $BuildNumber = '1',
-    # Set to true to disable env.props
-    [switch] $DisableEnvProps = $false,
     # Print the build and publish command instead of executing them if set
     [switch] $DryRun = $false,
     # Output debug info for tests: 'empty' (no additional test output), 'debug' (test cmd & stderr outputed), 'verbose' (test cmd, stderr, stdout outputed)
@@ -35,17 +33,6 @@ if ($AgentType -ne '' -and $AgentType -in $AgentTypes) {
     $AgentTypes = @($AgentType)
 }
 
-if (!$DisableEnvProps) {
-    Get-Content env.props | ForEach-Object {
-        $items = $_.Split('=')
-        if ($items.Length -eq 2) {
-            $name = $items[0].Trim()
-            $value = $items[1].Trim()
-            Set-Item -Path "env:$($name)" -Value $value
-        }
-    }
-}
-
 if (![String]::IsNullOrWhiteSpace($env:REMOTING_VERSION)) {
     $RemotingVersion = $env:REMOTING_VERSION
 }
@@ -59,8 +46,8 @@ if (![String]::IsNullOrWhiteSpace($env:IMAGE_TYPE)) {
 }
 
 $Organisation = 'jenkins4eval'
-if (![String]::IsNullOrWhiteSpace($env:DOCKERHUB_ORGANISATION)) {
-    $Organisation = $env:DOCKERHUB_ORGANISATION
+if (![String]::IsNullOrWhiteSpace($env:REGISTRY_ORG)) {
+    $Organisation = $env:REGISTRY_ORG
 }
 
 # Ensure constant env vars used in docker-bake.hcl are defined
