@@ -27,6 +27,10 @@ pipeline {
                         name 'IMAGE_TYPE'
                         values 'linux', 'nanoserver-1809', 'nanoserver-ltsc2019', 'nanoserver-ltsc2022', 'windowsservercore-1809', 'windowsservercore-ltsc2019', 'windowsservercore-ltsc2022'
                     }
+                    axis {
+                        name 'AGENT_TYPE'
+                        values 'agent', 'inbound-agent'
+                    }
                 }
                 stages {
                     stage('Main') {
@@ -55,13 +59,14 @@ pipeline {
                                 }
                                 steps {
                                     script {
+                                        // Running once for Linux which doesn't need to be splitted as it's quick enough
                                         if (isUnix()) {
                                             sh './build.sh'
                                             sh './build.sh test'
                                             // If the tests are passing for Linux AMD64, then we can build all the CPU architectures
                                             sh 'make every-build'
                                         } else {
-                                            powershell '& ./build.ps1 test'
+                                            powershell '& ./build.ps1 test -AgentType $env:AGENT_TYPE'
                                         }
                                     }
                                 }
@@ -87,10 +92,11 @@ pipeline {
                                             ) {
                                                 // This function is defined in the jenkins-infra/pipeline-library
                                                 infra.withDockerCredentials {
-                                                    if (isUnix()) {
+                                                    // Running once for Linux which doesn't need to be splitted as it's quick enough
+                                                    if (isUnix() && env.AGENT_TYPE == 'agent') {
                                                         sh 'make publish'
                                                     } else {
-                                                        powershell '& ./build.ps1 publish'
+                                                        powershell '& ./build.ps1 publish -AgentType $env:AGENT_TYPE'
                                                     }
                                                 }
                                             }
