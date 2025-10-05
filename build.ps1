@@ -175,9 +175,6 @@ Test-CommandExists 'docker-compose'
 Test-CommandExists 'docker buildx'
 Test-CommandExists 'yq'
 
-# Sanity checks
-Invoke-Expression 'docker info'
-
 # Doc: https://github.com/moby/buildkit/blob/master/docs/windows.md & https://docs.docker.com/build/buildkit/#buildkit-on-windows
 function Buildkit-Setup {
     param (
@@ -259,7 +256,10 @@ try {
 try {
     Buildkit-Setup -InstallContainerd $false -InstallBuildkitd $false
 } catch {}
-Get-WindowsOptionalFeature -Online
+
+# Sanity checks
+Invoke-Expression 'docker info'
+Get-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V, Containers
 
 # Docker warmup (TODO: proper improvement incoming to pull only the base images from docker bake/compose file)
 Write-Host '= PREPARE: Docker warmup (pull base images)'
