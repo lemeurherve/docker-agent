@@ -170,13 +170,30 @@ function Initialize-DockerComposeFile {
     Remove-Item env:\WINDOWS_AGENT_TYPE_OVERRIDE
 }
 
+function Buildkit-Setup {
+    param (
+        [Boolean] $InstallContainerd = $false
+    )
+
+    ## Reference: https://github.com/moby/buildkit/blob/master/docs/windows.md
+    # Ensure Hyper-V and Containers Windows features are enabled
+    Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V, Containers -All
+}
+
 Test-CommandExists 'docker'
 Test-CommandExists 'docker-compose'
 Test-CommandExists 'docker buildx'
 Test-CommandExists 'yq'
+try {
+    Test-CommandExists 'ctr'
+} catch {
+    Write-Host 'containerd not found'
+}
 
 # Sanity checks
 Invoke-Expression 'docker info'
+
+Buildkit-Setup -InstallContainerd $false
 Get-WindowsOptionalFeature -Online
 
 # Docker warmup (TODO: proper improvement incoming to pull only the base images from docker bake/compose file)
