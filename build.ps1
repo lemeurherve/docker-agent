@@ -256,9 +256,10 @@ try {
 } catch {
     Write-Host 'buildkitd not found'
 }
-Buildkit-Setup -InstallContainerd $false -InstallBuildkitd $false
+try {
+    Buildkit-Setup -InstallContainerd $false -InstallBuildkitd $false
+} catch {}
 Get-WindowsOptionalFeature -Online
-
 
 # Docker warmup (TODO: proper improvement incoming to pull only the base images from docker bake/compose file)
 Write-Host '= PREPARE: Docker warmup (pull base images)'
@@ -336,7 +337,7 @@ foreach($agentType in $AgentTypes) {
             if ($testMode -eq 'sequential') {
                 # Run Test-Image sequentially for each JDK
                 foreach ($jdk in $jdks.PSObject.Properties) {
-                    $testFailed = $testFailed -or (Test-Image -AgentType $agentType -RemotingVersion $RemotingVersion -ImageName $jdk.Value.image -JavaVersion $jdk.Value.build.args.JAVA_VERSION))
+                    $testFailed = $testFailed -or (Test-Image -AgentType $agentType -RemotingVersion $RemotingVersion -ImageName $jdk.Value.image -JavaVersion $jdk.Value.build.args.JAVA_VERSION)
                 }
             } else {
                 # Run Test-Image in parallel for each JDK
