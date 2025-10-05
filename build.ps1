@@ -259,7 +259,7 @@ try {
 
 # Sanity checks
 Invoke-Expression 'docker info'
-Get-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V, Containers
+Get-WindowsOptionalFeature -Online -FeatureName 'Microsoft-Hyper-V'
 
 # Docker warmup (TODO: proper improvement incoming to pull only the base images from docker bake/compose file)
 Write-Host '= PREPARE: Docker warmup (pull base images)'
