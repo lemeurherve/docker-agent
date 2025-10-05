@@ -274,6 +274,37 @@ function "windows_tags" {
   ]
 }
 
+# # From https://docs.docker.com/guides/bake/#exporting-build-artifacts
+# target "bin" {
+#   target = "bin"
+#   output = ["build/bin"]
+#   platforms = ["local"]
+# }
+
+# # FROM scratch AS bin
+# # COPY --from=build "/usr/bin/bakeme" /
+
+# target "bin-cross" {
+#   inherits = ["bin"]
+#   platforms = [
+#     "linux/amd64",
+#     "linux/arm64",
+#     "linux/riscv64",
+#   ]
+# }
+
+# target "bin-all" {
+#   inherits = ["bin-cross"]
+#   matrix = {
+#     mode = ["release", "debug"]
+#   }
+#   name = "bin-${mode}"
+#   args = {
+#     BUILD_TAGS = mode
+#   }
+#   output = ["build/bin/${mode}"]
+# }
+
 target "_common" {
   annotations = [
     "org.opencontainers.image.vendor=Jenkins project",
