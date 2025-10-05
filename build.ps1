@@ -335,6 +335,17 @@ foreach($agentType in $AgentTypes) {
             $testMode = 'sequential'
 
             if ($testMode -eq 'sequential') {
+                Write-Host "== TEST: Setting up Pester environment for $anImage testing..."
+                Import-Module Pester
+                $configuration = [PesterConfiguration]::Default
+                $configuration.Run.PassThru = $true
+                $configuration.Run.Path = '{0}\tests' -f $workspacePath
+                $configuration.Run.Exit = $true
+                $configuration.TestResult.Enabled = $true
+                $configuration.TestResult.OutputFormat = 'JUnitXml'
+                $configuration.Output.Verbosity = 'Diagnostic'
+                $configuration.CodeCoverage.Enabled = $false
+
                 # Run Test-Image sequentially for each JDK
                 foreach ($jdk in $jdks.PSObject.Properties) {
                     $testFailed = $testFailed -or (Test-Image -AgentType $agentType -RemotingVersion $RemotingVersion -ImageName $jdk.Value.image -JavaVersion $jdk.Value.build.args.JAVA_VERSION)
