@@ -127,7 +127,7 @@ Describe "[$global:IMAGE_NAME] custom build args" {
         Push-Location -StackName 'agent' -Path "$PSScriptRoot/.."
         # Old version used to test overriding the build arguments.
         # This old version must have the same tag suffixes as the current windows images (`-jdk17-nanoserver` etc.), and the same Windows version (2019, 2022, etc.)
-        $TEST_VERSION = '3341.v0766d82b_dec0-3'
+        $TEST_VERSION = '3341.v0766d82b_dec0'
         $customImageName = "custom-${global:IMAGE_NAME}"
     }
 
