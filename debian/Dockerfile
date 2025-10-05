@@ -120,7 +120,7 @@ ENV USER=${user}
 LABEL \
   org.opencontainers.image.title="Official Jenkins Agent Base Docker image" \
   org.opencontainers.image.description="This is a base image, which provides the Jenkins agent executable (agent.jar)" \
-  org.opencontainers.image.version="${VERSION}" \
+  org.opencontainers.image.version="${VERSION}"
 
 ## Inbound Agent image target
 FROM agent AS inbound-agent
@@ -136,6 +136,6 @@ USER ${user}
 LABEL \
   org.opencontainers.image.title="Official Jenkins Inbound Agent Base Docker image" \
   org.opencontainers.image.description="This is an image for Jenkins agents using TCP or WebSockets to establish inbound connection to the Jenkins controller" \
-  org.opencontainers.image.version="${VERSION}" \
+  org.opencontainers.image.version="${VERSION}"
 
 ENTRYPOINT ["/usr/local/bin/jenkins-agent"]
