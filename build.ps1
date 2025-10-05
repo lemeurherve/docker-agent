@@ -196,6 +196,7 @@ foreach ($image in $warmupImages) {
 }
 # Wait for all pulls to finish
 $warmupJobs | ForEach-Object { Receive-Job -Job $_ -Wait; Remove-Job $_ }
+Invoke-Expression 'docker images ls --tree'
 
 $testImageFunction = ${function:Test-Image}
 $workspacePath = (Get-Location).Path
