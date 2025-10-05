@@ -150,7 +150,8 @@ Describe "[$global:IMAGE_NAME] custom build args" {
         # # KO
         $ErrorActionPreference = 'Continue'
         Write-Output '[DEBUG] java -version:'
-        Write-Output (docker exec $global:CONTAINERNAME java -version)
+        $javaOutput = Invoke-Expression "docker exec $global:CONTAINERNAME java -version"
+        Write-Host "[DEBUG] java output: $javaOutput"
         Write-Output '[DEBUG] end java -version'
         $ErrorActionPreference = 'Stop'
 
