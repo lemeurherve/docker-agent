@@ -170,14 +170,73 @@ function Initialize-DockerComposeFile {
     Remove-Item env:\WINDOWS_AGENT_TYPE_OVERRIDE
 }
 
+# Doc: https://github.com/moby/buildkit/blob/master/docs/windows.md & https://docs.docker.com/build/buildkit/#buildkit-on-windows
 function Buildkit-Setup {
     param (
         [Boolean] $InstallContainerd = $false
+        [Boolean] $InstallBuildkitd = $false
     )
 
-    ## Reference: https://github.com/moby/buildkit/blob/master/docs/windows.md
     # Ensure Hyper-V and Containers Windows features are enabled
     Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V, Containers -All
+
+    # https://github.com/containerd/containerd/blob/main/docs/getting-started.md#installing-containerd-on-windows
+    if ($InstallContainerd) {
+        # If containerd previously installed run:
+        Stop-Service containerd
+
+        # Download and extract desired containerd Windows binaries
+        $Version="1.7.13"	# update to your preferred version
+        $Arch = "amd64"	# arm64 also available
+        curl.exe -LO https://github.com/containerd/containerd/releases/download/v$Version/containerd-$Version-windows-$Arch.tar.gz
+        tar.exe xvf .\containerd-$Version-windows-$Arch.tar.gz
+
+        # Copy
+        Copy-Item -Path .\bin -Destination $Env:ProgramFiles\containerd -Recurse -Force
+
+        # add the binaries (containerd.exe, ctr.exe) in $env:Path
+        $Path = [Environment]::GetEnvironmentVariable("PATH", "Machine") + [IO.Path]::PathSeparator + "$Env:ProgramFiles\containerd"
+        [Environment]::SetEnvironmentVariable( "Path", $Path, "Machine")
+        # reload path, so you don't have to open a new PS terminal later if needed
+        $Env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+
+        # configure
+        containerd.exe config default | Out-File $Env:ProgramFiles\containerd\config.toml -Encoding ascii
+        # Review the configuration. Depending on setup you may want to adjust:
+        # - the sandbox_image (Kubernetes pause image)
+        # - cni bin_dir and conf_dir locations
+        Get-Content $Env:ProgramFiles\containerd\config.toml
+
+        # Register and start service
+        containerd.exe --register-service
+        Start-Service containerd
+    }
+
+    if ($InstallBuildkitd) {
+        ## Download and extract
+        $url = "https://api.github.com/repos/moby/buildkit/releases/latest"
+        $version = (Invoke-RestMethod -Uri $url -UseBasicParsing).tag_name
+        $arch = "amd64" # arm64 binary available too
+        curl.exe -fSLO https://github.com/moby/buildkit/releases/download/$version/buildkit-$version.windows-$arch.tar.gz
+        # there could be another `.\bin` directory from containerd instructions
+        # you can move those
+        mv bin bin2
+        tar.exe xvf .\buildkit-$version.windows-$arch.tar.gz
+        ## x bin/
+        ## x bin/buildctl.exe
+        ## x bin/buildkitd.exe
+
+        ## Setup buildkitd binaries
+        # after the binaries are extracted in the bin directory
+        # move them to an appropriate path in your $Env:PATH directories or:
+        Copy-Item -Path ".\bin" -Destination "$Env:ProgramFiles\buildkit" -Recurse -Force
+        # add `buildkitd.exe` and `buildctl.exe` binaries in the $Env:PATH
+        $Path = [Environment]::GetEnvironmentVariable("PATH", "Machine") + `
+            [IO.Path]::PathSeparator + "$Env:ProgramFiles\buildkit"
+        [Environment]::SetEnvironmentVariable( "Path", $Path, "Machine")
+        $Env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + `
+            [System.Environment]::GetEnvironmentVariable("Path","User")
+    }
 }
 
 Test-CommandExists 'docker'
@@ -189,11 +248,16 @@ try {
 } catch {
     Write-Host 'containerd not found'
 }
+try {
+    Test-CommandExists 'buildkitd'
+} catch {
+    Write-Host 'buildkitd not found'
+}
 
 # Sanity checks
 Invoke-Expression 'docker info'
 
-Buildkit-Setup -InstallContainerd $false
+Buildkit-Setup -InstallContainerd $false -InstallBuildkitd $false
 Get-WindowsOptionalFeature -Online
 
 # Docker warmup (TODO: proper improvement incoming to pull only the base images from docker bake/compose file)
