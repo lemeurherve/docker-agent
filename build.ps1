@@ -253,9 +253,9 @@ try {
 } catch {
     Write-Host 'buildkitd not found'
 }
-try {
-    Buildkit-Setup -InstallContainerd $false -InstallBuildkitd $false
-} catch {}
+# try {
+#     Buildkit-Setup -InstallContainerd $false -InstallBuildkitd $false
+# } catch {}
 
 # Sanity checks
 Invoke-Expression 'docker info'
