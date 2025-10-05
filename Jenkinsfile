@@ -97,7 +97,7 @@ def parallelStages = [failFast: false]
                                     sh './build.sh'
                                     sh './build.sh test'
                                 } else {
-                                    powershell '& ./build.ps1 test -TestsDebug "verbose"'
+                                    powershell '& ./build.ps1 test'
                                     // TODO: always archive even on failure
                                     archiveArtifacts artifacts: 'build-windows_*.yaml', allowEmptyArchive: true
                                 }
