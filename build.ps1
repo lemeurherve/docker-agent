@@ -348,6 +348,7 @@ foreach($agentType in $AgentTypes) {
                 $configuration.CodeCoverage.Enabled = $false
 
                 # Run Test-Image sequentially for each JDK
+                Write-Host "= TEST: Starting ${image} tests sequentially..."
                 foreach ($jdk in $jdks.PSObject.Properties) {
                     $testFailed = $testFailed -or (Test-Image -AgentType $agentType -RemotingVersion $RemotingVersion -ImageName $jdk.Value.image -JavaVersion $jdk.Value.build.args.JAVA_VERSION)
                 }
