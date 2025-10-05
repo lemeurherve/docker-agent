@@ -175,8 +175,9 @@ Test-CommandExists 'docker-compose'
 Test-CommandExists 'docker buildx'
 Test-CommandExists 'yq'
 
-# Sanity check
+# Sanity checks
 Invoke-Expression 'docker info'
+Get-WindowsOptionalFeature -Online
 
 # Docker warmup (TODO: proper improvement incoming to pull only the base images from docker bake/compose file)
 Write-Host '= PREPARE: Docker warmup (pull base images)'
