@@ -281,10 +281,10 @@ target "_common" {
     "org.opencontainers.image.source=https://github.com/jenkinsci/docker-agent",
     "org.opencontainers.image.licenses=MIT"
   ]
-  # attest = [
-  #   "type=provenance,mode=max",
-  #   "type=sbom"
-  # ]
+  attest = [
+    "type=provenance,mode=max",
+    "type=sbom"
+  ]
 }
 
 target "alpine" {
