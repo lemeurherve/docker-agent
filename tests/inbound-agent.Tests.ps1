@@ -146,6 +146,12 @@ Describe "[$global:IMAGE_NAME] custom build args" {
         $stdout | Should -Match $TEST_VERSION
     }
 
+    It 'has java in the path with the correct major version' {
+        $exitCode, $stdout, $stderr = Run-Program 'docker' "exec $global:CONTAINERNAME $global:CONTAINERSHELL -c `"java -version`""
+        $exitCode | Should -Be 0
+        $stdout | Should -Match "OpenJDK Runtime Environment Temurin-${global:JAVAMAJORVERSION}"
+    }
+
     AfterAll {
         Cleanup($global:CONTAINERNAME)
         Pop-Location -StackName 'agent'
@@ -153,7 +159,7 @@ Describe "[$global:IMAGE_NAME] custom build args" {
 }
 
 Describe "[$global:IMAGE_NAME] passing JVM options (slow test)" {
-    It "shows the java version ${global:JAVAMAJORVERSION} with --show-version" {
+    It 'connects to the nmap container' {
         $exitCode, $stdout, $stderr = Run-Program 'docker' "network create --driver nat $global:JNLPNETWORKNAME"
         # Launch the netcat utility, listening at port 5000 for 30 sec
         # bats will capture the output from netcat and compare the first line
@@ -176,7 +182,6 @@ Describe "[$global:IMAGE_NAME] passing JVM options (slow test)" {
         Start-Sleep -Seconds 20
         $exitCode, $stdout, $stderr = Run-Program 'docker' "logs $global:CONTAINERNAME"
         $exitCode | Should -Be 0
-        $stdout | Should -Match "OpenJDK Runtime Environment Temurin-${global:JAVAMAJORVERSION}"
     }
 
     AfterAll {
