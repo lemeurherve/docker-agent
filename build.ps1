@@ -331,42 +331,51 @@ foreach($agentType in $AgentTypes) {
             Write-Host "= TEST: Testing all ${agentType} images..."
             $jdks = Invoke-Expression "$baseDockerCmd config" | yq --unwrapScalar --output-format json '.services' | ConvertFrom-Json
 
-            # Run Test-Image in parallel for each JDK
-            $jobs = @()
-            foreach ($jdk in $jdks.PSObject.Properties) {
-                $image = $jdk.Value.image
-                $javaVersion = $jdk.Value.build.args.JAVA_VERSION
-                Write-Host "= TEST: Starting ${image} tests in parallel..."
-                $jobs += Start-Job -ScriptBlock {
-                    param($anAgentType, $aRemotingVersion, $anImage, $aJavaVersion, $aTestImageFunction, $aWorkspacePath)
+            $testMode = 'sequential'
 
-                    Write-Host "== TEST: Setting up Pester environment for $anImage testing..."
-                    Import-Module Pester
-                    $configuration = [PesterConfiguration]::Default
-                    $configuration.Run.PassThru = $true
-                    $configuration.Run.Path = '{0}\tests' -f $aWorkspacePath
-                    $configuration.Run.Exit = $true
-                    $configuration.TestResult.Enabled = $true
-                    $configuration.TestResult.OutputFormat = 'JUnitXml'
-                    $configuration.Output.Verbosity = 'Diagnostic'
-                    $configuration.CodeCoverage.Enabled = $false
-                    Set-Item -Path Function:Test-Image -Value $aTestImageFunction
-                    Set-Location -Path $aWorkspacePath
-
-                    Test-Image -AgentType $anAgentType -RemotingVersion $aRemotingVersion -ImageName $anImage -JavaVersion $aJavaVersion
-                } -ArgumentList $agentType, $RemotingVersion, $image, $javaVersion, $testImageFunction, $workspacePath
-            }
-
-            # Wait for all jobs to finish and collect results
-            $testFailed = $false
-            foreach ($job in $jobs) {
-                $result = Receive-Job -Job $job -Wait
-                if ($result.Failed) {
-                    Write-Host "= TEST: Error(s), see the results below"
-                    $result.Tests | ConvertTo-Json | Write-Host
-                    $testFailed = $true
+            if ($testMode -eq 'sequential') {
+                # Run Test-Image sequentially for each JDK
+                foreach ($jdk in $jdks.PSObject.Properties) {
+                    $testFailed = $testFailed -or (Test-Image -AgentType $agentType -RemotingVersion $RemotingVersion -ImageName $jdk.Value.image -JavaVersion $jdk.Value.build.args.JAVA_VERSION))
                 }
-                Remove-Job $job
+            } else {
+                # Run Test-Image in parallel for each JDK
+                $jobs = @()
+                foreach ($jdk in $jdks.PSObject.Properties) {
+                    $image = $jdk.Value.image
+                    $javaVersion = $jdk.Value.build.args.JAVA_VERSION
+                    Write-Host "= TEST: Starting ${image} tests in parallel..."
+                    $jobs += Start-Job -ScriptBlock {
+                        param($anAgentType, $aRemotingVersion, $anImage, $aJavaVersion, $aTestImageFunction, $aWorkspacePath)
+
+                        Write-Host "== TEST: Setting up Pester environment for $anImage testing..."
+                        Import-Module Pester
+                        $configuration = [PesterConfiguration]::Default
+                        $configuration.Run.PassThru = $true
+                        $configuration.Run.Path = '{0}\tests' -f $aWorkspacePath
+                        $configuration.Run.Exit = $true
+                        $configuration.TestResult.Enabled = $true
+                        $configuration.TestResult.OutputFormat = 'JUnitXml'
+                        $configuration.Output.Verbosity = 'Diagnostic'
+                        $configuration.CodeCoverage.Enabled = $false
+                        Set-Item -Path Function:Test-Image -Value $aTestImageFunction
+                        Set-Location -Path $aWorkspacePath
+
+                        Test-Image -AgentType $anAgentType -RemotingVersion $aRemotingVersion -ImageName $anImage -JavaVersion $aJavaVersion
+                    } -ArgumentList $agentType, $RemotingVersion, $image, $javaVersion, $testImageFunction, $workspacePath
+                }
+
+                # Wait for all jobs to finish and collect results
+                $testFailed = $false
+                foreach ($job in $jobs) {
+                    $result = Receive-Job -Job $job -Wait
+                    if ($result.Failed) {
+                        Write-Host "= TEST: Error(s), see the results below"
+                        $result.Tests | ConvertTo-Json | Write-Host
+                        $testFailed = $true
+                    }
+                    Remove-Job $job
+                }
             }
 
             # Fail if any test failures
