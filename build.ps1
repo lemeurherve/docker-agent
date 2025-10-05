@@ -333,7 +333,7 @@ foreach($agentType in $AgentTypes) {
             Write-Host "= TEST: Testing all ${agentType} images..."
             $jdks = Invoke-Expression "$baseDockerCmd config" | yq --unwrapScalar --output-format json '.services' | ConvertFrom-Json
 
-            $testMode = 'sequential'
+            $testMode = $env:TESTS_MODE
 
             if ($testMode -eq 'sequential') {
                 Write-Host "== TEST: Setting up Pester environment for $anImage testing..."
