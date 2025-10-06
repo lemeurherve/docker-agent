@@ -127,30 +127,33 @@ def parallelStages = [failFast: false]
 def irrelevantRegexp = '^\\.github|^updatecli|^images|^LICENSE$|\\.md$|\\.adoc$'
 def skipBuild = false
 
-node {
-    stage('Check changes') {
-        checkout scm
-        withEnv(["IRRELEVANT_REGEXP=${irrelevantRegexp}"]) {
-            // Skip build if there are only irrelevant changes
-            skipBuild = sh(returnStatus: true, script: '''
-                #!/bin/bash
-                set +x
+if (!infra.isTrusted()) {
+    // Only check for irrelevant changes on non-trusted.ci builds
+    node {
+        stage('Check changes') {
+            checkout scm
+            withEnv(["IRRELEVANT_REGEXP=${irrelevantRegexp}"]) {
+                // Skip build if there are only irrelevant changes
+                skipBuild = sh(returnStatus: true, script: '''
+                    #!/bin/bash
+                    set +x
 
-                echo "INFO: Irrelevant changes regexp: ${IRRELEVANT_REGEXP}"
+                    echo "INFO: Irrelevant changes regexp: ${IRRELEVANT_REGEXP}"
 
-                all_changed_files=''
-                if [ -z "${CHANGE_TARGET}" ]; then
-                    all_changed_files="$(git diff --name-only HEAD^)"
-                    echo "INFO: List of file(s) changed in the last commit on ${BRANCH_NAME}:"
-                else
-                    all_changed_files="$(git diff --name-only "origin/${CHANGE_TARGET}..origin/${BRANCH_NAME}")"
-                    echo "INFO: List of file(s) changed in this pull request, comparing ${BRANCH_NAME} to ${CHANGE_TARGET}:"
-                fi
-                echo "${all_changed_files}"
-                irrelevant_changes=$(echo "${all_changed_files}" | grep -E "${IRRELEVANT_REGEXP}" | wc -l)
-                all_change=$(echo "${all_changed_files}" | wc -l)
-                [ $irrelevant_changes -gt 0 ] && [ $irrelevant_changes -eq $all_change ]
-            ''') == 0
+                    all_changed_files=''
+                    if [ -z "${CHANGE_TARGET}" ]; then
+                        all_changed_files="$(git diff --name-only HEAD^)"
+                        echo "INFO: List of file(s) changed in the last commit on ${BRANCH_NAME}:"
+                    else
+                        all_changed_files="$(git diff --name-only "origin/${CHANGE_TARGET}..origin/${BRANCH_NAME}")"
+                        echo "INFO: List of file(s) changed in this pull request, comparing ${BRANCH_NAME} to ${BRANCH_NAME}:"
+                    fi
+                    echo "${all_changed_files}"
+                    irrelevant_changes=$(echo "${all_changed_files}" | grep -E "${IRRELEVANT_REGEXP}" | wc -l)
+                    all_change=$(echo "${all_changed_files}" | wc -l)
+                    [ $irrelevant_changes -gt 0 ] && [ $irrelevant_changes -eq $all_change ]
+                ''') == 0
+            }
         }
     }
 }
