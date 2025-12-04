@@ -61,7 +61,7 @@ RUN New-Item -ItemType Directory -Path 'C:\temp' | Out-Null ; `
     Expand-Archive -Path 'C:\temp\pwsh.zip' -DestinationPath $env:PSHOME ; `
     Remove-Item -Path 'C:\temp\pwsh.zip' | Out-Null
 
-RUN if (Test-Path $('{0}\pwsh.exe' -f $env:PSHOME)) { Write-Host "File exists." } else { Write-Host "File does not exist." }
+RUN if (Test-Path $('{0}\pwsh.exe' -f $env:PSHOME)) { Write-Host "File exists." } else { throw "File does not exist." }
 
 ## Agent image target
 FROM mcr.microsoft.com/windows/nanoserver:"${WINDOWS_VERSION_TAG}" AS agent
