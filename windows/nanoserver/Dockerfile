@@ -104,7 +104,7 @@ USER ContainerAdministrator
 RUN Write-Output "ARE WE THERE YET?"
 RUN Write-Output "ARE WE THERE YET again?"
 RUN Write-Output $env:PSHOME
-RUN Get-ChildItem env: | Format-Table Name,Value -AutoSize
+RUN Get-ChildItem env: | ConvertTo-Json
 
 ARG GIT_VERSION=2.52.0
 ARG GIT_PATCH_VERSION=1
