@@ -102,7 +102,7 @@ SHELL ["pwsh.exe", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPrefer
 USER ContainerAdministrator
 
 RUN Write-Output "ARE WE THERE YET?"
-RUN Write-Output $env:$PSHOME
+RUN Write-Output $env:PSHOME
 RUN Get-ChildItem env:
 
 ARG GIT_VERSION=2.52.0
