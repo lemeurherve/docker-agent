@@ -195,8 +195,6 @@ foreach($agentType in $AgentTypes) {
             $true { Write-Host "(dry-run) $baseDockerBuildCmd" }
             $false { Invoke-Expression $baseDockerBuildCmd }
         }
-        Write-Host '= BUILD: Finished building all images.'
-
         if ($lastExitCode -ne 0) {
             exit $lastExitCode
         }
