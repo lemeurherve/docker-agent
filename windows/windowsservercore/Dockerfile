@@ -44,13 +44,16 @@ RUN Write-Output "dash-Output"
 # as recommended in https://learn.microsoft.com/en-us/powershell/scripting/install/install-powershell-on-windows?view=powershell-7.5#install-from-the-zip-package
 ARG POWERSHELL_VERSION=7.5.4
 ENV POWERSHELL_VERSION=${POWERSHELL_VERSION}
-ENV PATH="$env:PATH;C:\Windows\system32;C:\Windows;C:\Program Files\PowerShell\7;"
+# ENV PATH="$env:PATH;C:\Windows\system32;C:\Windows;C:\Program Files\PowerShell\7;"
 RUN New-Item -ItemType Directory -Path 'C:\temp' | Out-Null
 RUN $pwshUrl = 'https://github.com/PowerShell/PowerShell/releases/download/v{0}/PowerShell-{0}-win-x64.zip' -f $env:POWERSHELL_VERSION ; `
     Invoke-WebRequest $pwshUrl -OutFile 'C:\temp\pwsh.zip'
 RUN $powershellMajorVersion = $env:POWERSHELL_VERSION.substring(0,1) ; `
     Expand-Archive -Path 'C:\temp\pwsh.zip' -DestinationPath 'C:\Program Files\PowerShell\{1}' -f $env:ProgramFiles, $powershellMajorVersion ; `
     Remove-Item -Path C:\temp -Recurse | Out-Null
+RUN $CurrentPath = (Get-Itemproperty -path 'hklm:\system\currentcontrolset\control\session manager\environment' -Name Path).Path ; `
+    $NewPath = '{0};C:\Program Files\PowerShell\7' -f $CurrentPath ; `
+    Set-ItemProperty -path 'hklm:\system\currentcontrolset\control\session manager\environment' -Name Path -Value $NewPath
 
 ## Agent image target
 FROM mcr.microsoft.com/windows/servercore:"${WINDOWS_VERSION_TAG}" AS agent
