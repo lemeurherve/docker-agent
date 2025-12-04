@@ -55,11 +55,11 @@ ENV POWERSHELL_VERSION=${POWERSHELL_VERSION}
 # Ref: https://learn.microsoft.com/en-us/powershell/scripting/install/install-powershell-on-windows?view=powershell-7.5#install-from-the-zip-package
 ARG PSHOME="C:\Program Files\PowerShell\7"
 ENV PSHOME=${PSHOME}
-RUN curl.exe --silent --location "https://github.com/PowerShell/PowerShell/releases/download/v%POWERSHELL_VERSION%/PowerShell-%POWERSHELL_VERSION%-win-x64.zip" --output C:/windows/TEMP/pwsh.zip `
-&& mkdir "C:\Program Files\Powershell" `
-&& tar.exe -xf C:\windows\TEMP\pwsh.zip -C %PSHOME% `
-&& if exist "C:\windows\TEMP\pwsh.zip" del "C:\windows\TEMP\pwsh.zip"
-# TODO: test if ^ can be removed
+RUN New-Item -ItemType Directory -Path 'C:\temp' | Out-Null ; `
+    $pwshUrl = 'https://github.com/PowerShell/PowerShell/releases/download/v{0}/PowerShell-{0}-win-x64.zip' -f $env:POWERSHELL_VERSION ; `
+    Invoke-WebRequest $pwshUrl -OutFile 'C:\temp\pwsh.zip' ; `
+    Expand-Archive -Path 'C:\temp\pwsh.zip' -DestinationPath $env:PSHOME ; `
+    Remove-Item -Path 'C:\temp' -Recursive | Out-Null
 
 FROM mcr.microsoft.com/powershell:nanoserver-"${TOOLS_WINDOWS_VERSION}" AS pwsh-source
 
