@@ -58,7 +58,7 @@ ENV PSHOME=${PSHOME}
 RUN New-Item -ItemType Directory -Path 'C:\temp' | Out-Null ; `
     $pwshUrl = 'https://github.com/PowerShell/PowerShell/releases/download/v{0}/PowerShell-{0}-win-x64.zip' -f $env:POWERSHELL_VERSION ; `
     Invoke-WebRequest $pwshUrl -OutFile 'C:\temp\pwsh.zip' ; `
-    Expand-Archive -Path 'C:\temp\pwsh.zip' -DestinationPath $env:PSHOME ; `
+    Expand-Archive -Path 'C:\temp\pwsh.zip' -DestinationPath 'C:\temp' ; `
     Remove-Item -Path 'C:\temp\pwsh.zip' | Out-Null
 
 RUN if (Test-Path $('{0}\pwsh.exe' -f $env:PSHOME)) { Write-Host "File exists." } else { throw "File does not exist." }
@@ -80,9 +80,10 @@ RUN cd
 RUN dir temp
 RUN dir C:\Windows
 RUN dir C:\Windows\Temp
-RUN IF NOT EXIST "C:\windows\TEMP" EXIT /B 1
-RUN IF NOT EXIST "C:\windows\TEMP\pwsh.exe" EXIT /B 1
-RUN IF NOT EXIST %TEMP% EXIT /B 1
+RUN echo %PSHOME%
+
+RUN move C:\temp\* %PSHOME%
+RUN move C:\temp\* "C:\Program Files\PowerShell\7"
 
 ENV PATH="C:\Windows\system32;C:\Windows;C:\Program Files\PowerShell\7;"
 
