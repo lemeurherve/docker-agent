@@ -72,6 +72,8 @@ ENV PSHOME=${PSHOME}
 # Windows Server Core doesn't allow copying from C:\Program Files\
 COPY --from=jdk-core /temp $PSHOME
 
+RUN IF NOT EXIST %PSHOME%\pwsh.exe EXIT /B 1
+
 ENV PATH="C:\Windows\system32;C:\Windows;C:\Program Files\PowerShell\7;"
 
 # The nanoserver image is nice and small, but we need a couple of things to get SSH working
