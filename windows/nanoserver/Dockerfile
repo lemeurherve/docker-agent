@@ -72,10 +72,12 @@ ARG JAVA_HOME="C:\openjdk-17"
 ENV PSHOME=${PSHOME}
 
 # Windows Server Core doesn't allow copying from C:\Program Files\
-COPY --from=jdk-core /temp /Windows/Temp
+COPY --from=jdk-core /temp /temp
 
 RUN SET
 RUN dir C:
+RUN cd
+RUN dir temp
 RUN dir C:\Windows
 RUN dir C:\Windows\Temp
 RUN IF NOT EXIST "C:\windows\TEMP" EXIT /B 1
