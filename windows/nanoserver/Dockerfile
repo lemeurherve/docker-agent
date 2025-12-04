@@ -175,6 +175,8 @@ RUN [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tl
 #     icacls $('{0}/.jenkins' -f $env:AGENT_ROOT) /grant "$env:USER_NAME:(OI)(CI)F" ; \
 #     icacls $env:AGENT_WORKDIR /grant "$env:USER_NAME:(OI)(CI)F"
 
+RUN New-Item -ItemType Directory -Path "C:/Users/$env:USER" -Force | Out-Null
+
 USER $user
 
 # Was declared there at the beginning
