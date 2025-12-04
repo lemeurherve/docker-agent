@@ -63,8 +63,7 @@ COPY --from=jdk-core /temp $PSHOME
 
 RUN $CurrentPath = (Get-Itemproperty -path 'hklm:\system\currentcontrolset\control\session manager\environment' -Name Path).Path ; `
     $NewPath = '{0};{1}' -f $CurrentPath, $env:PSHOME ; `
-    Set-ItemProperty -path 'hklm:\system\currentcontrolset\control\session manager\environment' -Name Path -Value $NewPath ; `
-    Remove-Item -Path C:\temp -Recurse | Out-Null
+    Set-ItemProperty -path 'hklm:\system\currentcontrolset\control\session manager\environment' -Name Path -Value $NewPath
 
 # Switch to PowerShell 7
 SHELL ["pwsh.exe", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
