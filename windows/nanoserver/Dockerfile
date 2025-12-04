@@ -103,7 +103,7 @@ USER ContainerAdministrator
 
 RUN Write-Output "ARE WE THERE YET?"
 RUN Write-Output $env:PSHOME
-RUN Get-ChildItem env:
+RUN Get-ChildItem env: | ForEach-Object { "$($_.Name)=$($_.Value)" }
 
 ARG GIT_VERSION=2.52.0
 ARG GIT_PATCH_VERSION=1
