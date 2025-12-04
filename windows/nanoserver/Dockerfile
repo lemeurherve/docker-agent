@@ -68,8 +68,7 @@ FROM mcr.microsoft.com/powershell:nanoserver-"${TOOLS_WINDOWS_VERSION}" AS pwsh-
 FROM mcr.microsoft.com/windows/nanoserver:"${WINDOWS_VERSION_TAG}" AS agent
 
 ARG JAVA_HOME="C:\openjdk-17"
-# ???
-# ENV PSHOME=${PSHOME}
+ENV PSHOME=${PSHOME}
 
 COPY --from=jdk-core $PSHOME $PSHOME
 
