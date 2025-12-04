@@ -77,11 +77,12 @@ RUN SET
 RUN dir C:
 RUN cd
 # OK \o/
-# RUN dir temp
+RUN dir temp
 RUN dir C:\Windows
 RUN echo %PSHOME%
 
-RUN move C:\temp\* "C:\Program Files\PowerShell\7" && rmdir C:\temp
+# RUN move C:\temp\* "C:\Program Files\PowerShell\7" && rmdir C:\temp
+RUN move C:\temp\* "C:\Program Files\PowerShell\7"
 
 # RUN robocopy "C:\temp" "%PSHOME%" /E /MOVE /COPYALL && rmdir "C:\temp"
 # RUN robocopy "C:\temp" %PSHOME% /E /MOVE /COPYALL && rmdir "C:\temp"
