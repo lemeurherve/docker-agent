@@ -120,7 +120,7 @@ RUN [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tl
 ENV ProgramFiles="C:\Program Files" `
     WindowsPATH="C:\Windows\system32;C:\Windows" `
     JAVA_HOME="${JAVA_HOME}"
-ENV PATH="${WindowsPATH};${PSHOME};${JAVA_HOME}\bin;C:\mingit\cmd"
+ENV PATH="${PATH};${WindowsPATH};${PSHOME};${JAVA_HOME}\bin;C:\mingit\cmd"
 
 ARG GIT_LFS_VERSION=3.7.1
 RUN [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 ; `
