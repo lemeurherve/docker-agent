@@ -64,15 +64,15 @@ RUN New-Item -ItemType Directory -Path 'C:\temp' | Out-Null ; `
 ## Agent image target
 FROM mcr.microsoft.com/windows/nanoserver:"${WINDOWS_VERSION_TAG}" AS agent
 
+SHELL ["cmd.exe", "/c"]
+
 ARG JAVA_HOME="C:\openjdk-17"
 ENV PSHOME=${PSHOME}
 
 # Windows Server Core doesn't allow copying from C:\Program Files\
 COPY --from=jdk-core /temp $PSHOME
 
-RUN setx /M PATH "%PATH%;%PSHOME%"
-
-ENV PATH="C:\Windows\system32;C:\Windows;${PSHOME};"
+ENV PATH="C:\Windows\system32;C:\Windows;%PSHOME%;"
 
 # The nanoserver image is nice and small, but we need a couple of things to get SSH working
 COPY --from=jdk-core /windows/system32/netapi32.dll /windows/system32/netapi32.dll
