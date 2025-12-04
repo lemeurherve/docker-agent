@@ -101,6 +101,8 @@ COPY --from=jdk-core $JAVA_HOME $JAVA_HOME
 SHELL ["pwsh.exe", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
 USER ContainerAdministrator
 
+RUN Write-Output "ARE WE THERE YET?"
+
 ARG GIT_VERSION=2.52.0
 ARG GIT_PATCH_VERSION=1
 RUN [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 ; `
