@@ -136,6 +136,7 @@ RUN [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tl
     & c:\mingit\mingw64\bin\git-lfs.exe install
 
 ARG user=jenkins
+ENV user=${user}
 ENV USER=${user}
 
 ARG AGENT_FILENAME=agent.jar
@@ -148,12 +149,13 @@ RUN net accounts /maxpwage:unlimited ; `
     net localgroup Administrators /add $env:USER ; `
     New-Item -ItemType Directory -Path C:/ProgramData/Jenkins | Out-Null
 
-RUN Get-ChildItem env: | ConvertTo-Json
 
 ARG AGENT_ROOT=C:/Users/$user
 ARG AGENT_WORKDIR=${AGENT_ROOT}/Work
 
 ENV AGENT_WORKDIR=${AGENT_WORKDIR}
+
+RUN Get-ChildItem env: | ConvertTo-Json
 
 # Get the Agent from the Jenkins Artifacts Repository
 ARG VERSION=3355.v388858a_47b_33
