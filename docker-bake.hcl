@@ -193,7 +193,9 @@ function "toolsversion" {
   params = [version]
   result = (equal("ltsc2019", version)
     ? "1809"
-  : version)
+    : (equal("ltsc2025", version)
+    ? "ltsc2022"
+    : version))
 }
 
 # Return an array of RHEL UBI 9 platforms to use depending on the jdk passed as parameter

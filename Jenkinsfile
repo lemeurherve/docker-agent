@@ -17,9 +17,9 @@ def agentSelector(String imageType) {
             return 'docker-highmem'
         }
     }
-    // Windows Server Core 2022 agent
-    if (imageType.contains('2022')) {
-        return 'windows-2022'
+    // Windows Server Core 2025 agent for both 2022 and 2025 images
+    if (imageType.contains('2022') || imageType.contains('2025')) {
+        return 'windows-2025'
     }
     // Windows Server Core 2019 agent (for nanoserver 1809 & ltsc2019 and for windowservercore ltsc2019)
     return 'windows-2019'
@@ -47,9 +47,11 @@ def parallelStages = [failFast: false]
     'nanoserver-1809',
     'nanoserver-ltsc2019',
     'nanoserver-ltsc2022',
+    'nanoserver-ltsc2025',
     'windowsservercore-1809',
     'windowsservercore-ltsc2019',
-    'windowsservercore-ltsc2022'
+    'windowsservercore-ltsc2022',
+    'windowsservercore-ltsc2025'
 ].each { imageType ->
     parallelStages[imageType] = {
         withEnv(["IMAGE_TYPE=${imageType}", "REGISTRY_ORG=${infra.isTrusted() ? 'jenkins' : 'jenkins4eval'}"]) {

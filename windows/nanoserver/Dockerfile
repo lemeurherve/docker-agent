@@ -48,10 +48,12 @@ ENV PSHOME="C:\Program Files\PowerShell"
 ENV PATH="C:\Windows\system32;C:\Windows;${PSHOME};"
 
 # The nanoserver image is nice and small, but we need a couple of things to get SSH working
-COPY --from=jdk-core /windows/system32/netapi32.dll /windows/system32/netapi32.dll
 COPY --from=jdk-core /windows/system32/whoami.exe /windows/system32/whoami.exe
 COPY --from=jdk-core $JAVA_HOME $JAVA_HOME
 COPY --from=pwsh-source $PSHOME $PSHOME
+# While nanoserver-ltsc2025 includes netapi32.dll, older versions don't
+COPY --from=jdk-core /windows/system32/netapi32.dll $PSHOME/netapi32.dll
+RUN If (!(Test-Path 'C:/windows/system32/netapi32.dll') -And (Test-Path "$env:PSHOME/netapi32.dll")) { Move-Item "$env:PSHOME/netapi32.dll" 'C:/windows/system32/netapi32.dll' } Else { Write-Host "No $env:PSHOME/netapi32.dll or windows/system32/netapi32.dll alreay exists" }
 
 SHELL ["pwsh.exe", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
 USER ContainerAdministrator

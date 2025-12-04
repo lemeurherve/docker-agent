@@ -14,9 +14,13 @@ $items = $global:IMAGE_TAG.Split('-')
 $global:JAVAMAJORVERSION = $items[0].Remove(0,3)
 $global:WINDOWSFLAVOR = $items[1]
 $global:WINDOWSVERSIONTAG = $items[2]
-$global:WINDOWSVERSIONFALLBACKTAG = $items[2]
+$global:TOOLSWINDOWSVERSION = $items[2]
 if ($items[2] -eq 'ltsc2019') {
-    $global:WINDOWSVERSIONFALLBACKTAG = '1809'
+    $global:TOOLSWINDOWSVERSION = '1809'
+}
+# There is no mcr.microsoft.com/powershell:*-ltsc2025 docker images unfortunately, using a ltsc2022 instead
+if ($items[2] -eq 'ltsc2025') {
+    $global:TOOLSWINDOWSVERSION = 'ltsc2022'
 }
 
 $random = Get-Random
@@ -156,7 +160,7 @@ Describe "[$global:IMAGE_NAME] can be built with custom build arguments" {
     BeforeAll {
         Push-Location -StackName 'agent' -Path "$PSScriptRoot/.."
 
-        $exitCode, $stdout, $stderr = Run-Program 'docker' "build --target agent --build-arg `"VERSION=${global:TEST_VERSION}`" --build-arg `"JAVA_VERSION=${global:JAVA_VERSION}`" --build-arg `"JAVA_HOME=C:\openjdk-${global:JAVAMAJORVERSION}`" --build-arg `"WINDOWS_VERSION_TAG=${global:WINDOWSVERSIONTAG}`" --build-arg `"TOOLS_WINDOWS_VERSION=${global:WINDOWSVERSIONFALLBACKTAG}`" --build-arg `"user=${global:TEST_USER}`" --build-arg `"AGENT_WORKDIR=${global:TEST_AGENT_WORKDIR}`" --tag ${global:IMAGE_NAME} --file ./windows/${global:WINDOWSFLAVOR}/Dockerfile ."
+        $exitCode, $stdout, $stderr = Run-Program 'docker' "build --target agent --build-arg `"VERSION=${global:TEST_VERSION}`" --build-arg `"JAVA_VERSION=${global:JAVA_VERSION}`" --build-arg `"JAVA_HOME=C:\openjdk-${global:JAVAMAJORVERSION}`" --build-arg `"WINDOWS_VERSION_TAG=${global:WINDOWSVERSIONTAG}`" --build-arg `"TOOLS_WINDOWS_VERSION=${global:TOOLSWINDOWSVERSION}`" --build-arg `"user=${global:TEST_USER}`" --build-arg `"AGENT_WORKDIR=${global:TEST_AGENT_WORKDIR}`" --tag ${global:IMAGE_NAME} --file ./windows/${global:WINDOWSFLAVOR}/Dockerfile ."
         $exitCode | Should -Be 0
 
         $exitCode, $stdout, $stderr = Run-Program 'docker' "run -d -it --name $global:CONTAINERNAME -P $global:IMAGE_NAME $global:CONTAINERSHELL"
