@@ -175,10 +175,11 @@ RUN [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tl
 #     icacls $('{0}/.jenkins' -f $env:AGENT_ROOT) /grant "$env:USER_NAME:(OI)(CI)F" ; \
 #     icacls $env:AGENT_WORKDIR /grant "$env:USER_NAME:(OI)(CI)F"
 
-RUN New-Item -ItemType Directory -Path "C:/Users/$env:USER" -Force | Out-Null
-RUN icacls "C:/Users/$env:USER" /grant "$env:USER:(OI)(CI)F"
+# RUN New-Item -ItemType Directory -Path "C:/Users/$env:USER" -Force | Out-Null
+# RUN icacls "C:/Users/$env:USER" /grant "$env:USER:(OI)(CI)F"
 
 USER $user
+RUN New-Item -ItemType Directory -Path "C:/Users/$env:USER" -Force | Out-Null
 
 # Was declared there at the beginning
 RUN New-Item -Type Directory $('{0}/.jenkins' -f $env:AGENT_ROOT) | Out-Null
