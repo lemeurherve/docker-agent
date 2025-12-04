@@ -54,14 +54,13 @@ ENV POWERSHELL_VERSION=${POWERSHELL_VERSION}
 # Using $env:ProgramFile\Powershell7 for best results
 # Ref: https://learn.microsoft.com/en-us/powershell/scripting/install/install-powershell-on-windows?view=powershell-7.5#install-from-the-zip-package
 ARG PSHOME="C:\Program Files\PowerShell\7"
-ENV PSHOME=${PSHOME}
 RUN New-Item -ItemType Directory -Path 'C:\temp' | Out-Null ; `
     $pwshUrl = 'https://github.com/PowerShell/PowerShell/releases/download/v{0}/PowerShell-{0}-win-x64.zip' -f $env:POWERSHELL_VERSION ; `
     Invoke-WebRequest $pwshUrl -OutFile 'C:\temp\pwsh.zip' ; `
     Expand-Archive -Path 'C:\temp\pwsh.zip' -DestinationPath 'C:\temp' ; `
     Remove-Item -Path 'C:\temp\pwsh.zip' | Out-Null
 
-RUN if (Test-Path $('{0}\pwsh.exe' -f $env:PSHOME)) { Write-Host "File exists." } else { throw "File does not exist." }
+RUN if (Test-Path $('C:\temp\pwsh.exe')) { Write-Host "File exists." } else { throw "File does not exist." }
 
 ## Agent image target
 FROM mcr.microsoft.com/windows/nanoserver:"${WINDOWS_VERSION_TAG}" AS agent
