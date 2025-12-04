@@ -43,13 +43,13 @@ RUN Write-Output "dash-Output"
 # Using $env:ProgramFile\Powershell7 as destination for best results
 # as recommended in https://learn.microsoft.com/en-us/powershell/scripting/install/install-powershell-on-windows?view=powershell-7.5#install-from-the-zip-package
 ARG POWERSHELL_VERSION=7.5.4
+ARG PSHOME="C:\Program Files\PowerShell\7"
 ENV POWERSHELL_VERSION=${POWERSHELL_VERSION}
-# ENV PATH="$env:PATH;C:\Windows\system32;C:\Windows;C:\Program Files\PowerShell\7;"
-RUN New-Item -ItemType Directory -Path 'C:\temp' | Out-Null
-RUN $pwshUrl = 'https://github.com/PowerShell/PowerShell/releases/download/v{0}/PowerShell-{0}-win-x64.zip' -f $env:POWERSHELL_VERSION ; `
-    Invoke-WebRequest $pwshUrl -OutFile 'C:\temp\pwsh.zip'
-RUN $powershellMajorVersion = $env:POWERSHELL_VERSION.substring(0,1) ; `
-    Expand-Archive -Path 'C:\temp\pwsh.zip' -DestinationPath 'C:\Program Files\PowerShell\7' ; `
+ENV PSHOME=${PSHOME}
+RUN New-Item -ItemType Directory -Path 'C:\temp' | Out-Null ; `
+    $pwshUrl = 'https://github.com/PowerShell/PowerShell/releases/download/v{0}/PowerShell-{0}-win-x64.zip' -f $env:POWERSHELL_VERSION ; `
+    Invoke-WebRequest $pwshUrl -OutFile 'C:\temp\pwsh.zip' ; `
+    Expand-Archive -Path 'C:\temp\pwsh.zip' -DestinationPath $env:PSHOME ; `
     Remove-Item -Path C:\temp -Recurse | Out-Null
 
 ## Agent image target
@@ -59,7 +59,7 @@ SHELL ["powershell.exe", "-Command", "$ErrorActionPreference = 'Stop'; $Progress
 
 ARG JAVA_HOME="C:\openjdk-17"
 ENV JAVA_HOME=${JAVA_HOME}
-ENV PSHOME="C:\Program Files\PowerShell\7"
+ENV PSHOME=${PSHOME}
 
 RUN $CurrentPath = (Get-Itemproperty -path 'hklm:\system\currentcontrolset\control\session manager\environment' -Name Path).Path ; `
     $NewPath = '{0};{1}' -f $CurrentPath, $env:PSHOME ; `
@@ -68,6 +68,7 @@ RUN $CurrentPath = (Get-Itemproperty -path 'hklm:\system\currentcontrolset\contr
 COPY --from=jdk-core $JAVA_HOME $JAVA_HOME
 COPY --from=jdk-core $PSHOME $PSHOME
 
+# Switch to PowerShell 7
 SHELL ["pwsh.exe", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
 
 ARG GIT_VERSION=2.52.0
