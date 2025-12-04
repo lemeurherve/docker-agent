@@ -53,7 +53,7 @@ ARG POWERSHELL_VERSION=7.5.4
 ENV POWERSHELL_VERSION=${POWERSHELL_VERSION}
 # Using $env:ProgramFile\Powershell7 for best results
 # Ref: https://learn.microsoft.com/en-us/powershell/scripting/install/install-powershell-on-windows?view=powershell-7.5#install-from-the-zip-package
-ARG PSHOME="C:\Program Files\PowerShell\7"
+ARG PSHOME="C:\Program Files\PowerShell"
 RUN New-Item -ItemType Directory -Path 'C:\temp' | Out-Null ; `
     $pwshUrl = 'https://github.com/PowerShell/PowerShell/releases/download/v{0}/PowerShell-{0}-win-x64.zip' -f $env:POWERSHELL_VERSION ; `
     Invoke-WebRequest $pwshUrl -OutFile 'C:\temp\pwsh.zip' ; `
@@ -81,16 +81,16 @@ RUN dir temp
 RUN dir C:\Windows
 RUN echo %PSHOME%
 
-# RUN move C:\temp\* "C:\Program Files\PowerShell\7" && rmdir C:\temp
-# RUN move C:\temp\* "C:\Program Files\PowerShell\7"
-RUN xcopy "C:\temp" "C:\Program Files\PowerShell\7" /E /I /H /Y
+# RUN move C:\temp\* "C:\Program Files\PowerShell" && rmdir C:\temp
+# RUN move C:\temp\* "C:\Program Files\PowerShell"
+RUN xcopy "C:\temp" "C:\Program Files\PowerShell" /E /I /H /Y
 
 # RUN robocopy "C:\temp" "%PSHOME%" /E /MOVE /COPYALL && rmdir "C:\temp"
 # RUN robocopy "C:\temp" %PSHOME% /E /MOVE /COPYALL && rmdir "C:\temp"
 # RUN move C:\temp\* %PSHOME%
-# RUN move C:\temp\* "C:\Program Files\PowerShell\7"
+# RUN move C:\temp\* "C:\Program Files\PowerShell"
 
-ENV PATH="C:\Windows\system32;C:\Windows;C:\Program Files\PowerShell\7;"
+ENV PATH="C:\Windows\system32;C:\Windows;C:\Program Files\PowerShell;"
 
 # The nanoserver image is nice and small, but we need a couple of things to get SSH working
 COPY --from=jdk-core /windows/system32/netapi32.dll /windows/system32/netapi32.dll
