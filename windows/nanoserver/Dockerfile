@@ -70,7 +70,7 @@ ARG JAVA_HOME="C:\openjdk-17"
 ENV PSHOME=${PSHOME}
 
 # Windows Server Core doesn't allow copying from C:\Program Files\
-COPY --from=jdk-core /temp '/Program Files/PowerShell/7'
+COPY --from=jdk-core /temp /Program Files/PowerShell/7
 
 RUN SET
 RUN IF NOT EXIST "C:\Program Files\PowerShell\7" EXIT /B 1
