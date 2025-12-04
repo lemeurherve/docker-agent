@@ -25,6 +25,7 @@
 ARG WINDOWS_VERSION_TAG=ltsc2019
 FROM mcr.microsoft.com/windows/servercore:"${WINDOWS_VERSION_TAG}" AS jdk-core
 
+# PowerShell 5.1 by default in Windows Server Core image
 # $ProgressPreference: https://github.com/PowerShell/PowerShell/issues/2138#issuecomment-251261324
 SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
 
@@ -38,8 +39,6 @@ RUN New-Item -ItemType Directory -Path C:\temp | Out-Null ; `
     Remove-Item -Path C:\temp -Recurse | Out-Null
 
 # Download PowerShell 7
-# Using $env:ProgramFile\Powershell7 as destination for best results
-# as recommended in https://learn.microsoft.com/en-us/powershell/scripting/install/install-powershell-on-windows?view=powershell-7.5#install-from-the-zip-package
 ARG POWERSHELL_VERSION=7.5.4
 ENV POWERSHELL_VERSION=${POWERSHELL_VERSION}
 RUN New-Item -ItemType Directory -Path 'C:\temp' | Out-Null ; `
@@ -55,6 +54,8 @@ SHELL ["powershell.exe", "-Command", "$ErrorActionPreference = 'Stop'; $Progress
 
 ARG JAVA_HOME="C:\openjdk-17"
 ENV JAVA_HOME=${JAVA_HOME}
+# Using $env:ProgramFile\Powershell7 for best results
+# Ref: https://learn.microsoft.com/en-us/powershell/scripting/install/install-powershell-on-windows?view=powershell-7.5#install-from-the-zip-package
 ENV PSHOME="C:\Program Files\PowerShell\7"
 
 COPY --from=jdk-core $JAVA_HOME $JAVA_HOME
