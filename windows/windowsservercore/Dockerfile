@@ -23,7 +23,6 @@
 #  THE SOFTWARE.
 
 ARG WINDOWS_VERSION_TAG=ltsc2019
-ARG TOOLS_WINDOWS_VERSION # Empty (only used on nanoserver)
 FROM mcr.microsoft.com/windows/servercore:"${WINDOWS_VERSION_TAG}" AS jdk-core
 
 # $ProgressPreference: https://github.com/PowerShell/PowerShell/issues/2138#issuecomment-251261324
@@ -38,6 +37,21 @@ RUN New-Item -ItemType Directory -Path C:\temp | Out-Null ; `
     $proc.WaitForExit() ; `
     Remove-Item -Path C:\temp -Recurse | Out-Null
 
+# Download PowerShell 7
+# Using $env:ProgramFile\Powershell7 as destination for best results
+# as recommended in https://learn.microsoft.com/en-us/powershell/scripting/install/install-powershell-on-windows?view=powershell-7.5#install-from-the-zip-package
+ARG POWERSHELL_VERSION=7.5.4
+ARG POWERSHELL_MAJOR_VERSION=7.5.4
+ENV POWERSHELL_VERSION=${POWERSHELL_VERSION}
+ENV PSHOME=${ProgramFile}\PowerShell\${POWERSHELL_MAJOR_VERSION}
+ENV PATH="C:\Windows\system32;C:\Windows;${PSHOME};"
+RUN New-Item -ItemType Directory -Path C:\temp | Out-Null ; `
+    $powershellMajorVersion = $env:POWERSHELL_VERSION.substring(0,1)
+    $pwshUrl = 'https://github.com/PowerShell/PowerShell/releases/download/v{0}/PowerShell-{0}-win-x64.zip' -f $env:POWERSHELL_VERSION ; \
+    Invoke-WebRequest $pwshUrl -OutFile 'C:\temp\pwsh.zip' ; `
+    Expand-Archive -Path 'C:\temp\pwsh.zip' -DestinationPath '{0}\PowerShell\{1}' -f $env:ProgramFiles, $powershellMajorVersion ; `
+    Remove-Item -Path C:\temp -Recurse | Out-Null
+
 ## Agent image target
 FROM mcr.microsoft.com/windows/servercore:"${WINDOWS_VERSION_TAG}" AS agent
 
@@ -45,8 +59,9 @@ ARG JAVA_HOME="C:\openjdk-17"
 ENV JAVA_HOME=${JAVA_HOME}
 
 COPY --from=jdk-core $JAVA_HOME $JAVA_HOME
+COPY --from=jdk-core $PSHOME $PSHOME
 
-SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
+SHELL ["pwsh.exe", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
 
 ARG GIT_VERSION=2.52.0
 ARG GIT_PATCH_VERSION=1
@@ -135,4 +150,4 @@ LABEL `
     org.opencontainers.image.source="https://github.com/jenkinsci/docker-agent" `
     org.opencontainers.image.licenses="MIT"
 
-ENTRYPOINT ["powershell.exe", "-f", "C:/ProgramData/Jenkins/jenkins-agent.ps1"]
+ENTRYPOINT ["pwsh.exe", "-f", "C:/ProgramData/Jenkins/jenkins-agent.ps1"]
