@@ -135,8 +135,8 @@ RUN [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tl
     Remove-Item GitLfs.zip -Force ; `
     & c:\mingit\mingw64\bin\git-lfs.exe install
 
-ARG user=jenkins
-ENV USER=${user}
+ARG IMAGE_USER=jenkins
+ENV USER=${IMAGE_USER}
 
 ARG AGENT_FILENAME=agent.jar
 ARG AGENT_HASH_FILENAME=$AGENT_FILENAME.sha1
@@ -149,7 +149,7 @@ RUN net accounts /maxpwage:unlimited ; `
     New-Item -ItemType Directory -Path C:/ProgramData/Jenkins | Out-Null
 
 
-ARG AGENT_ROOT=C:/Users/$user
+ARG AGENT_ROOT=C:/Users/$IMAGE_USER
 ARG AGENT_WORKDIR=${AGENT_ROOT}/Work
 
 ENV AGENT_WORKDIR=${AGENT_WORKDIR}
@@ -163,25 +163,8 @@ RUN [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tl
     Invoke-WebRequest $('https://repo.jenkins-ci.org/public/org/jenkins-ci/main/remoting/{0}/remoting-{0}.jar.sha1' -f $env:VERSION) -OutFile (Join-Path C:/ProgramData/Jenkins $env:AGENT_HASH_FILENAME) -UseBasicParsing ; `
     if ((Get-FileHash (Join-Path C:/ProgramData/Jenkins $env:AGENT_FILENAME) -Algorithm SHA1).Hash -ne (Get-Content (Join-Path C:/ProgramData/Jenkins $env:AGENT_HASH_FILENAME))) {exit 1} ; `
     Remove-Item -Force (Join-Path C:/ProgramData/Jenkins $env:AGENT_HASH_FILENAME)
-# RUN [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-# RUN Invoke-WebRequest $('https://repo.jenkins-ci.org/public/org/jenkins-ci/main/remoting/{0}/remoting-{0}.jar' -f $env:VERSION) -OutFile $(Join-Path C:/ProgramData/Jenkins $env:AGENT_FILENAME) -UseBasicParsing
-# RUN Invoke-WebRequest $('https://repo.jenkins-ci.org/public/org/jenkins-ci/main/remoting/{0}/remoting-{0}.jar.sha1' -f $env:VERSION) -OutFile (Join-Path C:/ProgramData/Jenkins $env:AGENT_HASH_FILENAME) -UseBasicParsing
-# RUN if ((Get-FileHash (Join-Path C:/ProgramData/Jenkins $env:AGENT_FILENAME) -Algorithm SHA1).Hash -ne (Get-Content (Join-Path C:/ProgramData/Jenkins $env:AGENT_HASH_FILENAME))) {exit 1}
-# RUN Remove-Item -Force (Join-Path C:/ProgramData/Jenkins $env:AGENT_HASH_FILENAME)
+USER $IMAGE_USER
 
-# ## Was not declared there at the beginning, but after USER $user
-# RUN New-Item -Type Directory $('{0}/.jenkins' -f $env:AGENT_ROOT) | Out-Null ; `
-#     New-Item -Type Directory $env:AGENT_WORKDIR | Out-Null
-#     icacls $('{0}/.jenkins' -f $env:AGENT_ROOT) /grant "$env:USER_NAME:(OI)(CI)F" ; \
-#     icacls $env:AGENT_WORKDIR /grant "$env:USER_NAME:(OI)(CI)F"
-
-# RUN New-Item -ItemType Directory -Path "C:/Users/$env:USER" -Force | Out-Null
-# RUN icacls "C:/Users/$env:USER" /grant "$env:USER:(OI)(CI)F"
-
-USER $user
-RUN New-Item -ItemType Directory -Path "C:/Users/$env:USER" -Force | Out-Null
-
-# Was declared there at the beginning
 RUN New-Item -Type Directory $('{0}/.jenkins' -f $env:AGENT_ROOT) | Out-Null
 RUN New-Item -Type Directory $env:AGENT_WORKDIR | Out-Null
 
@@ -191,7 +174,6 @@ RUN git config --system core.longpaths true ; `
 VOLUME "${AGENT_ROOT}"/.jenkins
 VOLUME "${AGENT_WORKDIR}"
 WORKDIR "${AGENT_ROOT}"
-ENV USER=${user}
 LABEL `
     org.opencontainers.image.vendor="Jenkins project" `
     org.opencontainers.image.title="Official Jenkins Agent Base Docker image" `
