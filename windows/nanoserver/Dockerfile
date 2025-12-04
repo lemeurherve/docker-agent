@@ -165,11 +165,17 @@ RUN [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tl
     if ((Get-FileHash (Join-Path C:/ProgramData/Jenkins $env:AGENT_FILENAME) -Algorithm SHA1).Hash -ne (Get-Content (Join-Path C:/ProgramData/Jenkins $env:AGENT_HASH_FILENAME))) {exit 1} ; `
     Remove-Item -Force (Join-Path C:/ProgramData/Jenkins $env:AGENT_HASH_FILENAME)
 
-# Create user home directory and subdirectories with proper permissions
-RUN New-Item -Type Directory -Path $env:AGENT_ROOT -Force | Out-Null ; `
-    New-Item -Type Directory -Path $('{0}/.jenkins' -f $env:AGENT_ROOT) -Force | Out-Null ; `
+# Create user home directory and register profile with Windows
+RUN $profilePath = $env:AGENT_ROOT ; `
+    New-Item -Type Directory -Path $profilePath -Force | Out-Null ; `
+    New-Item -Type Directory -Path $('{0}/.jenkins' -f $profilePath) -Force | Out-Null ; `
     New-Item -Type Directory -Path $env:AGENT_WORKDIR -Force | Out-Null ; `
-    icacls $env:AGENT_ROOT /grant ('{0}:(OI)(CI)F' -f $env:USER) /T
+    icacls $profilePath /grant ('{0}:(OI)(CI)F' -f $env:USER) /T ; `
+    $userAccount = New-Object System.Security.Principal.NTAccount($env:USER) ; `
+    $sid = $userAccount.Translate([System.Security.Principal.SecurityIdentifier]).Value ; `
+    $profileListPath = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\{0}' -f $sid ; `
+    New-Item -Path $profileListPath -Force | Out-Null ; `
+    New-ItemProperty -Path $profileListPath -Name 'ProfileImagePath' -Value $profilePath -PropertyType String -Force | Out-Null
 
 USER $IMAGE_USER
 
