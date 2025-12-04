@@ -102,6 +102,7 @@ SHELL ["pwsh.exe", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPrefer
 USER ContainerAdministrator
 
 RUN Write-Output "ARE WE THERE YET?"
+RUN Write-Output "ARE WE THERE YET again?"
 RUN Write-Output $env:PSHOME
 RUN Get-ChildItem env: | Format-Table Name,Value -AutoSize
 
