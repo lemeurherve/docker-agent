@@ -37,14 +37,12 @@ RUN New-Item -ItemType Directory -Path C:\temp | Out-Null ; `
     $proc.WaitForExit() ; `
     Remove-Item -Path C:\temp -Recurse | Out-Null
 
-RUN Write-Output "dash-Output"
-
 # Download PowerShell 7
 # Using $env:ProgramFile\Powershell7 as destination for best results
 # as recommended in https://learn.microsoft.com/en-us/powershell/scripting/install/install-powershell-on-windows?view=powershell-7.5#install-from-the-zip-package
 ARG POWERSHELL_VERSION=7.5.4
-ARG PSHOME="C:\Program Files\PowerShell\7"
 ENV POWERSHELL_VERSION=${POWERSHELL_VERSION}
+ARG PSHOME="C:\Program Files\PowerShell\7"
 ENV PSHOME=${PSHOME}
 RUN New-Item -ItemType Directory -Path 'C:\temp' | Out-Null ; `
     $pwshUrl = 'https://github.com/PowerShell/PowerShell/releases/download/v{0}/PowerShell-{0}-win-x64.zip' -f $env:POWERSHELL_VERSION ; `
