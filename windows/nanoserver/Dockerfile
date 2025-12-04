@@ -72,7 +72,7 @@ ENV PSHOME=${PSHOME}
 # Windows Server Core doesn't allow copying from C:\Program Files\
 COPY --from=jdk-core /temp $PSHOME
 
-ENV PATH="C:\Windows\system32;C:\Windows;%PSHOME%;"
+ENV PATH="C:\Windows\system32;C:\Windows;C:\Program Files\PowerShell\7;"
 
 # The nanoserver image is nice and small, but we need a couple of things to get SSH working
 COPY --from=jdk-core /windows/system32/netapi32.dll /windows/system32/netapi32.dll
@@ -97,7 +97,7 @@ RUN [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tl
 ENV ProgramFiles="C:\Program Files" `
     WindowsPATH="C:\Windows\system32;C:\Windows" `
     JAVA_HOME="${JAVA_HOME}"
-ENV PATH="${WindowsPATH};${ProgramFiles}\PowerShell;${JAVA_HOME}\bin;C:\mingit\cmd"
+ENV PATH="${WindowsPATH};${PSHOME};${JAVA_HOME}\bin;C:\mingit\cmd"
 
 ARG GIT_LFS_VERSION=3.7.1
 RUN [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 ; `
