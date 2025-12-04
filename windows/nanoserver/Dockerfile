@@ -92,10 +92,17 @@ RUN xcopy "C:\temp" "C:\Program Files\PowerShell" /E /I /H /Y
 
 ENV PATH="C:\Windows\system32;C:\Windows;C:\Program Files\PowerShell;"
 
-# The nanoserver image is nice and small, but we need a couple of things to get SSH working
+# The nanoserver image is nice and small, but we need additional dependencies for PowerShell and SSH
 COPY --from=jdk-core /windows/system32/netapi32.dll /windows/system32/netapi32.dll
 COPY --from=jdk-core /windows/system32/whoami.exe /windows/system32/whoami.exe
 COPY --from=jdk-core /windows/system32/icacls.exe /windows/system32/icacls.exe
+# Additional DLLs required for PowerShell from GitHub releases to work on nanoserver
+COPY --from=jdk-core /windows/system32/msvcr120.dll /windows/system32/msvcr120.dll
+COPY --from=jdk-core /windows/system32/msvcp120.dll /windows/system32/msvcp120.dll
+COPY --from=jdk-core /windows/system32/vcruntime140.dll /windows/system32/vcruntime140.dll
+COPY --from=jdk-core /windows/system32/msvcp140.dll /windows/system32/msvcp140.dll
+COPY --from=jdk-core /windows/system32/samcli.dll /windows/system32/samcli.dll
+COPY --from=jdk-core /windows/system32/samlib.dll /windows/system32/samlib.dll
 COPY --from=jdk-core $JAVA_HOME $JAVA_HOME
 # COPY --from=pwsh-source $PSHOME $PSHOME
 
