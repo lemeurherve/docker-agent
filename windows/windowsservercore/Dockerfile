@@ -37,6 +37,8 @@ RUN New-Item -ItemType Directory -Path C:\temp | Out-Null ; `
     $proc.WaitForExit() ; `
     Remove-Item -Path C:\temp -Recurse | Out-Null
 
+RUN Write-Output "dash-Output"
+
 # Download PowerShell 7
 # Using $env:ProgramFile\Powershell7 as destination for best results
 # as recommended in https://learn.microsoft.com/en-us/powershell/scripting/install/install-powershell-on-windows?view=powershell-7.5#install-from-the-zip-package
@@ -47,8 +49,8 @@ RUN New-Item -ItemType Directory -Path 'C:\mytemp' | Out-Null
 RUN $pwshUrl = 'https://github.com/PowerShell/PowerShell/releases/download/v{0}/PowerShell-{0}-win-x64.zip' -f $env:POWERSHELL_VERSION ; `
     Invoke-WebRequest $pwshUrl -OutFile 'C:\mytemp\pwsh.zip'
 RUN $powershellMajorVersion = $env:POWERSHELL_VERSION.substring(0,1) ; `
-    Expand-Archive -Path 'C:\temp\pwsh.zip' -DestinationPath 'C:\Program Files\PowerShell\{1}' -f $env:ProgramFiles, $powershellMajorVersion ; `
-    Remove-Item -Path C:\temp -Recurse | Out-Null
+    Expand-Archive -Path 'C:\mytemp\pwsh.zip' -DestinationPath 'C:\Program Files\PowerShell\{1}' -f $env:ProgramFiles, $powershellMajorVersion ; `
+    Remove-Item -Path C:\mytemp -Recurse | Out-Null
 
 ## Agent image target
 FROM mcr.microsoft.com/windows/servercore:"${WINDOWS_VERSION_TAG}" AS agent
