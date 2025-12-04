@@ -58,9 +58,8 @@ ENV PSHOME=${PSHOME}
 RUN New-Item -ItemType Directory -Path 'C:\temp' | Out-Null ; `
     $pwshUrl = 'https://github.com/PowerShell/PowerShell/releases/download/v{0}/PowerShell-{0}-win-x64.zip' -f $env:POWERSHELL_VERSION ; `
     Invoke-WebRequest $pwshUrl -OutFile 'C:\temp\pwsh.zip' ; `
-    Expand-Archive -Path 'C:\temp\pwsh.zip' -DestinationPath $env:PSHOME
-    # Expand-Archive -Path 'C:\temp\pwsh.zip' -DestinationPath $env:PSHOME ; `
-    # Remove-Item -Path 'C:\temp' -Recursive | Out-Null
+    Expand-Archive -Path 'C:\temp\pwsh.zip' -DestinationPath $env:PSHOME ; `
+    Remove-Item -Path 'C:\temp' -Recurse | Out-Null
 
 ## Agent image target
 FROM mcr.microsoft.com/windows/nanoserver:"${WINDOWS_VERSION_TAG}" AS agent
@@ -68,7 +67,8 @@ FROM mcr.microsoft.com/windows/nanoserver:"${WINDOWS_VERSION_TAG}" AS agent
 ARG JAVA_HOME="C:\openjdk-17"
 ENV PSHOME=${PSHOME}
 
-COPY --from=jdk-core $PSHOME $PSHOME
+# Windows Server Core doesn't allow copying from C:\Program Files\
+COPY --from=jdk-core /temp $PSHOME
 
 RUN setx /M PATH "%PATH%;%PSHOME%"
 
