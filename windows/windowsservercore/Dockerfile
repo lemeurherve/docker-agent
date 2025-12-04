@@ -44,7 +44,7 @@ RUN Write-Output "dash-Output"
 # as recommended in https://learn.microsoft.com/en-us/powershell/scripting/install/install-powershell-on-windows?view=powershell-7.5#install-from-the-zip-package
 ARG POWERSHELL_VERSION=7.5.4
 ENV POWERSHELL_VERSION=${POWERSHELL_VERSION}
-ENV PATH="C:\Windows\system32;C:\Windows;C:\Program Files\PowerShell\7;"
+ENV PATH="$env:PATH;C:\Windows\system32;C:\Windows;C:\Program Files\PowerShell\7;"
 RUN New-Item -ItemType Directory -Path 'C:\mytemp' | Out-Null
 RUN $pwshUrl = 'https://github.com/PowerShell/PowerShell/releases/download/v{0}/PowerShell-{0}-win-x64.zip' -f $env:POWERSHELL_VERSION ; `
     Invoke-WebRequest $pwshUrl -OutFile 'C:\mytemp\pwsh.zip'
