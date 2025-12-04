@@ -51,16 +51,19 @@ RUN $pwshUrl = 'https://github.com/PowerShell/PowerShell/releases/download/v{0}/
 RUN $powershellMajorVersion = $env:POWERSHELL_VERSION.substring(0,1) ; `
     Expand-Archive -Path 'C:\temp\pwsh.zip' -DestinationPath 'C:\Program Files\PowerShell\7' ; `
     Remove-Item -Path C:\temp -Recurse | Out-Null
-RUN $CurrentPath = (Get-Itemproperty -path 'hklm:\system\currentcontrolset\control\session manager\environment' -Name Path).Path ; `
-    $NewPath = '{0};C:\Program Files\PowerShell\7' -f $CurrentPath ; `
-    Set-ItemProperty -path 'hklm:\system\currentcontrolset\control\session manager\environment' -Name Path -Value $NewPath
 
 ## Agent image target
 FROM mcr.microsoft.com/windows/servercore:"${WINDOWS_VERSION_TAG}" AS agent
 
+SHELL ["powershell.exe", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
+
 ARG JAVA_HOME="C:\openjdk-17"
 ENV JAVA_HOME=${JAVA_HOME}
 ENV PSHOME="C:\Program Files\PowerShell\7"
+
+RUN $CurrentPath = (Get-Itemproperty -path 'hklm:\system\currentcontrolset\control\session manager\environment' -Name Path).Path ; `
+    $NewPath = '{0};{1}' -f $CurrentPath, $env:PSHOME ; `
+    Set-ItemProperty -path 'hklm:\system\currentcontrolset\control\session manager\environment' -Name Path -Value $NewPath
 
 COPY --from=jdk-core $JAVA_HOME $JAVA_HOME
 COPY --from=jdk-core $PSHOME $PSHOME
