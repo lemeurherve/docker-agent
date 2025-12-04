@@ -135,20 +135,19 @@ RUN [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tl
     Remove-Item GitLfs.zip -Force ; `
     & c:\mingit\mingw64\bin\git-lfs.exe install
 
-RUN Get-ChildItem env:USER | ConvertTo-Json
 ARG user=jenkins
 
 ARG AGENT_FILENAME=agent.jar
 ARG AGENT_HASH_FILENAME=$AGENT_FILENAME.sha1
 
-RUN Get-ChildItem env:USER | ConvertTo-Json
+RUN Get-ChildItem env: | ConvertTo-Json
 
 RUN net accounts /maxpwage:unlimited ; `
     net user "$env:USER" /add /expire:never /passwordreq:no ; `
     net localgroup Administrators /add $env:USER ; `
     New-Item -ItemType Directory -Path C:/ProgramData/Jenkins | Out-Null
 
-RUN Get-ChildItem env:USER | ConvertTo-Json
+RUN Get-ChildItem env: | ConvertTo-Json
 
 ARG AGENT_ROOT=C:/Users/$user
 ARG AGENT_WORKDIR=${AGENT_ROOT}/Work
