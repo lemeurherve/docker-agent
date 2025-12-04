@@ -95,6 +95,7 @@ ENV PATH="C:\Windows\system32;C:\Windows;C:\Program Files\PowerShell;"
 # The nanoserver image is nice and small, but we need a couple of things to get SSH working
 COPY --from=jdk-core /windows/system32/netapi32.dll /windows/system32/netapi32.dll
 COPY --from=jdk-core /windows/system32/whoami.exe /windows/system32/whoami.exe
+COPY --from=jdk-core /windows/system32/icacls.exe /windows/system32/icacls.exe
 COPY --from=jdk-core $JAVA_HOME $JAVA_HOME
 # COPY --from=pwsh-source $PSHOME $PSHOME
 
@@ -163,10 +164,14 @@ RUN [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tl
     Invoke-WebRequest $('https://repo.jenkins-ci.org/public/org/jenkins-ci/main/remoting/{0}/remoting-{0}.jar.sha1' -f $env:VERSION) -OutFile (Join-Path C:/ProgramData/Jenkins $env:AGENT_HASH_FILENAME) -UseBasicParsing ; `
     if ((Get-FileHash (Join-Path C:/ProgramData/Jenkins $env:AGENT_FILENAME) -Algorithm SHA1).Hash -ne (Get-Content (Join-Path C:/ProgramData/Jenkins $env:AGENT_HASH_FILENAME))) {exit 1} ; `
     Remove-Item -Force (Join-Path C:/ProgramData/Jenkins $env:AGENT_HASH_FILENAME)
-USER $IMAGE_USER
 
-RUN New-Item -Type Directory $('{0}/.jenkins' -f $env:AGENT_ROOT) | Out-Null
-RUN New-Item -Type Directory $env:AGENT_WORKDIR | Out-Null
+# Create user home directory and subdirectories with proper permissions
+RUN New-Item -Type Directory -Path $env:AGENT_ROOT -Force | Out-Null ; `
+    New-Item -Type Directory -Path $('{0}/.jenkins' -f $env:AGENT_ROOT) -Force | Out-Null ; `
+    New-Item -Type Directory -Path $env:AGENT_WORKDIR -Force | Out-Null ; `
+    icacls $env:AGENT_ROOT /grant ('{0}:(OI)(CI)F' -f $env:USER) /T
+
+USER $IMAGE_USER
 
 RUN git config --system core.longpaths true ; `
     Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem' -Name LongPathsEnabled -type DWord -Value 1
