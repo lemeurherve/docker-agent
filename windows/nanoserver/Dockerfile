@@ -81,10 +81,12 @@ RUN cd
 RUN dir C:\Windows
 RUN echo %PSHOME%
 
-RUN robocopy "C:\temp" "%PSHOME%" /E /MOVE /COPYALL && rmdir "C:\temp"
-RUN robocopy "C:\temp" %PSHOME% /E /MOVE /COPYALL && rmdir "C:\temp"
-RUN move C:\temp\* %PSHOME%
-RUN move C:\temp\* "C:\Program Files\PowerShell\7"
+RUN move C:\temp\* "C:\Program Files\PowerShell\7" && rmdir C:\temp
+
+# RUN robocopy "C:\temp" "%PSHOME%" /E /MOVE /COPYALL && rmdir "C:\temp"
+# RUN robocopy "C:\temp" %PSHOME% /E /MOVE /COPYALL && rmdir "C:\temp"
+# RUN move C:\temp\* %PSHOME%
+# RUN move C:\temp\* "C:\Program Files\PowerShell\7"
 
 ENV PATH="C:\Windows\system32;C:\Windows;C:\Program Files\PowerShell\7;"
 
