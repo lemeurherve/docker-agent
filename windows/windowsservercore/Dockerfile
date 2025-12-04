@@ -42,13 +42,11 @@ RUN New-Item -ItemType Directory -Path C:\temp | Out-Null ; `
 # as recommended in https://learn.microsoft.com/en-us/powershell/scripting/install/install-powershell-on-windows?view=powershell-7.5#install-from-the-zip-package
 ARG POWERSHELL_VERSION=7.5.4
 ENV POWERSHELL_VERSION=${POWERSHELL_VERSION}
-ARG PSHOME="C:\Program Files\PowerShell\7"
-ENV PSHOME=${PSHOME}
 RUN New-Item -ItemType Directory -Path 'C:\temp' | Out-Null ; `
     $pwshUrl = 'https://github.com/PowerShell/PowerShell/releases/download/v{0}/PowerShell-{0}-win-x64.zip' -f $env:POWERSHELL_VERSION ; `
     Invoke-WebRequest $pwshUrl -OutFile 'C:\temp\pwsh.zip' ; `
-    Expand-Archive -Path 'C:\temp\pwsh.zip' -DestinationPath $env:PSHOME ; `
-    Remove-Item -Path C:\temp -Recurse | Out-Null
+    Expand-Archive -Path 'C:\temp\pwsh.zip' -DestinationPath 'C:\temp' ; `
+    Remove-Item -Path C:\temp 'C:\temp\pwsh.zip' | Out-Null
 
 ## Agent image target
 FROM mcr.microsoft.com/windows/servercore:"${WINDOWS_VERSION_TAG}" AS agent
@@ -57,14 +55,16 @@ SHELL ["powershell.exe", "-Command", "$ErrorActionPreference = 'Stop'; $Progress
 
 ARG JAVA_HOME="C:\openjdk-17"
 ENV JAVA_HOME=${JAVA_HOME}
-ENV PSHOME=${PSHOME}
+ENV PSHOME="C:\Program Files\PowerShell\7"
+
+COPY --from=jdk-core $JAVA_HOME $JAVA_HOME
+# Windows Server Core doesn't allow copying from C:\Program Files\
+COPY --from=jdk-core /temp $PSHOME
 
 RUN $CurrentPath = (Get-Itemproperty -path 'hklm:\system\currentcontrolset\control\session manager\environment' -Name Path).Path ; `
     $NewPath = '{0};{1}' -f $CurrentPath, $env:PSHOME ; `
-    Set-ItemProperty -path 'hklm:\system\currentcontrolset\control\session manager\environment' -Name Path -Value $NewPath
-
-COPY --from=jdk-core $JAVA_HOME $JAVA_HOME
-COPY --from=jdk-core $PSHOME $PSHOME
+    Set-ItemProperty -path 'hklm:\system\currentcontrolset\control\session manager\environment' -Name Path -Value $NewPath ; `
+    Remove-Item -Path C:\temp -Recurse | Out-Null
 
 # Switch to PowerShell 7
 SHELL ["pwsh.exe", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
