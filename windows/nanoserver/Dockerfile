@@ -178,8 +178,8 @@ RUN [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tl
 USER $user
 
 # Was declared there at the beginning
-RUN New-Item -Type Directory $('{0}/.jenkins' -f $env:AGENT_ROOT) | Out-Null ; `
-    New-Item -Type Directory $env:AGENT_WORKDIR | Out-Null
+RUN New-Item -Type Directory $('{0}/.jenkins' -f $env:AGENT_ROOT) | Out-Null
+RUN New-Item -Type Directory $env:AGENT_WORKDIR | Out-Null
 
 RUN git config --system core.longpaths true ; `
     Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem' -Name LongPathsEnabled -type DWord -Value 1
