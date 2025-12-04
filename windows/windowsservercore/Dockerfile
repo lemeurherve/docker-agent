@@ -41,10 +41,8 @@ RUN New-Item -ItemType Directory -Path C:\temp | Out-Null ; `
 # Using $env:ProgramFile\Powershell7 as destination for best results
 # as recommended in https://learn.microsoft.com/en-us/powershell/scripting/install/install-powershell-on-windows?view=powershell-7.5#install-from-the-zip-package
 ARG POWERSHELL_VERSION=7.5.4
-ARG POWERSHELL_MAJOR_VERSION=7.5.4
 ENV POWERSHELL_VERSION=${POWERSHELL_VERSION}
-ENV PSHOME=${ProgramFile}\PowerShell\${POWERSHELL_MAJOR_VERSION}
-ENV PATH="C:\Windows\system32;C:\Windows;${PSHOME};"
+ENV PATH="C:\Windows\system32;C:\Windows;${ProgramFiles}\PowerShell\7;"
 RUN New-Item -ItemType Directory -Path C:\temp | Out-Null ; `
     $powershellMajorVersion = $env:POWERSHELL_VERSION.substring(0,1) ; `
     $pwshUrl = 'https://github.com/PowerShell/PowerShell/releases/download/v{0}/PowerShell-{0}-win-x64.zip' -f $env:POWERSHELL_VERSION ; \
@@ -57,6 +55,7 @@ FROM mcr.microsoft.com/windows/servercore:"${WINDOWS_VERSION_TAG}" AS agent
 
 ARG JAVA_HOME="C:\openjdk-17"
 ENV JAVA_HOME=${JAVA_HOME}
+ENV PSHOME=${ProgramFile}\PowerShell\7
 
 COPY --from=jdk-core $JAVA_HOME $JAVA_HOME
 COPY --from=jdk-core $PSHOME $PSHOME
