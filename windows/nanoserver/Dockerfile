@@ -76,9 +76,9 @@ COPY --from=jdk-core /temp /temp
 RUN SET
 RUN dir C:
 RUN cd
-RUN dir temp
+# OK \o/
+# RUN dir temp
 RUN dir C:\Windows
-RUN dir C:\Windows\Temp
 RUN echo %PSHOME%
 
 RUN move C:\temp\* %PSHOME%
