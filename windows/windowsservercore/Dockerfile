@@ -45,7 +45,7 @@ ENV POWERSHELL_VERSION=${POWERSHELL_VERSION}
 ENV PATH="C:\Windows\system32;C:\Windows;${ProgramFiles}\PowerShell\7;"
 RUN New-Item -ItemType Directory -Path C:\temp | Out-Null ; `
     $powershellMajorVersion = $env:POWERSHELL_VERSION.substring(0,1) ; `
-    $pwshUrl = 'https://github.com/PowerShell/PowerShell/releases/download/v{0}/PowerShell-{0}-win-x64.zip' -f $env:POWERSHELL_VERSION ; \
+    $pwshUrl = 'https://github.com/PowerShell/PowerShell/releases/download/v{0}/PowerShell-{0}-win-x64.zip' -f $env:POWERSHELL_VERSION ; `
     Invoke-WebRequest $pwshUrl -OutFile 'C:\temp\pwsh.zip' ; `
     Expand-Archive -Path 'C:\temp\pwsh.zip' -DestinationPath '{0}\PowerShell\{1}' -f $env:ProgramFiles, $powershellMajorVersion ; `
     Remove-Item -Path C:\temp -Recurse | Out-Null
