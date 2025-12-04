@@ -135,15 +135,20 @@ RUN [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tl
     Remove-Item GitLfs.zip -Force ; `
     & c:\mingit\mingw64\bin\git-lfs.exe install
 
+RUN Get-ChildItem env:USER | ConvertTo-Json
 ARG user=jenkins
 
 ARG AGENT_FILENAME=agent.jar
 ARG AGENT_HASH_FILENAME=$AGENT_FILENAME.sha1
 
+RUN Get-ChildItem env:USER | ConvertTo-Json
+
 RUN net accounts /maxpwage:unlimited ; `
     net user "$env:USER" /add /expire:never /passwordreq:no ; `
     net localgroup Administrators /add $env:USER ; `
     New-Item -ItemType Directory -Path C:/ProgramData/Jenkins | Out-Null
+
+RUN Get-ChildItem env:USER | ConvertTo-Json
 
 ARG AGENT_ROOT=C:/Users/$user
 ARG AGENT_WORKDIR=${AGENT_ROOT}/Work
@@ -160,8 +165,8 @@ ARG VERSION=3355.v388858a_47b_33
 RUN [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 RUN Invoke-WebRequest $('https://repo.jenkins-ci.org/public/org/jenkins-ci/main/remoting/{0}/remoting-{0}.jar' -f $env:VERSION) -OutFile $(Join-Path C:/ProgramData/Jenkins $env:AGENT_FILENAME) -UseBasicParsing
 RUN Invoke-WebRequest $('https://repo.jenkins-ci.org/public/org/jenkins-ci/main/remoting/{0}/remoting-{0}.jar.sha1' -f $env:VERSION) -OutFile (Join-Path C:/ProgramData/Jenkins $env:AGENT_HASH_FILENAME) -UseBasicParsing
-RUN if ((Get-FileHash (Join-Path C:/ProgramData/Jenkins $env:AGENT_FILENAME) -Algorithm SHA1).Hash -ne (Get-Content (Join-Path C:/ProgramData/Jenkins $env:AGENT_HASH_FILENAME))) {exit 1} ; `
-    Remove-Item -Force (Join-Path C:/ProgramData/Jenkins $env:AGENT_HASH_FILENAME)
+RUN if ((Get-FileHash (Join-Path C:/ProgramData/Jenkins $env:AGENT_FILENAME) -Algorithm SHA1).Hash -ne (Get-Content (Join-Path C:/ProgramData/Jenkins $env:AGENT_HASH_FILENAME))) {exit 1}
+RUN Remove-Item -Force (Join-Path C:/ProgramData/Jenkins $env:AGENT_HASH_FILENAME)
 
 
 USER $user
