@@ -38,20 +38,49 @@ RUN New-Item -ItemType Directory -Path C:\temp | Out-Null ; `
     $proc.WaitForExit() ; `
     Remove-Item -Path C:\temp -Recurse | Out-Null
 
+
+# # Download and install PowerShell 7
+# ARG POWERSHELL_VERSION=7.5.4
+# ENV POWERSHELL_VERSION=${POWERSHELL_VERSION}
+# ENV PATH="C:\Windows\system32;C:\Windows;C:\Program Files\Powershell;"
+# RUN curl.exe --silent --location "https://github.com/PowerShell/PowerShell/releases/download/v%POWERSHELL_VERSION%/PowerShell-%POWERSHELL_VERSION%-win-x64.zip" --output C:/windows/TEMP/pwsh.zip `
+# && mkdir "C:\Program Files\Powershell" `
+# && tar.exe -xf C:\windows\TEMP\pwsh.zip -C "C:\Program Files\Powershell" `
+# && if exist "C:\windows\TEMP\pwsh.zip" del "C:\windows\TEMP\pwsh.zip"
+
+# Download PowerShell 7
+ARG POWERSHELL_VERSION=7.5.4
+ENV POWERSHELL_VERSION=${POWERSHELL_VERSION}
+# Using $env:ProgramFile\Powershell7 for best results
+# Ref: https://learn.microsoft.com/en-us/powershell/scripting/install/install-powershell-on-windows?view=powershell-7.5#install-from-the-zip-package
+ARG PSHOME="C:\Program Files\PowerShell\7"
+ENV PSHOME=${PSHOME}
+RUN curl.exe --silent --location "https://github.com/PowerShell/PowerShell/releases/download/v%POWERSHELL_VERSION%/PowerShell-%POWERSHELL_VERSION%-win-x64.zip" --output C:/windows/TEMP/pwsh.zip `
+&& mkdir "C:\Program Files\Powershell" `
+&& tar.exe -xf C:\windows\TEMP\pwsh.zip -C %PSHOME% `
+&& if exist "C:\windows\TEMP\pwsh.zip" del "C:\windows\TEMP\pwsh.zip"
+# TODO: test if ^ can be removed
+
 FROM mcr.microsoft.com/powershell:nanoserver-"${TOOLS_WINDOWS_VERSION}" AS pwsh-source
 
 ## Agent image target
 FROM mcr.microsoft.com/windows/nanoserver:"${WINDOWS_VERSION_TAG}" AS agent
 
 ARG JAVA_HOME="C:\openjdk-17"
-ENV PSHOME="C:\Program Files\PowerShell"
+# ???
+# ENV PSHOME=${PSHOME}
+
+COPY --from=jdk-core $PSHOME $PSHOME
+
+RUN setx /M PATH "%PATH%;%PSHOME%"
+
 ENV PATH="C:\Windows\system32;C:\Windows;${PSHOME};"
 
 # The nanoserver image is nice and small, but we need a couple of things to get SSH working
 COPY --from=jdk-core /windows/system32/netapi32.dll /windows/system32/netapi32.dll
 COPY --from=jdk-core /windows/system32/whoami.exe /windows/system32/whoami.exe
 COPY --from=jdk-core $JAVA_HOME $JAVA_HOME
-COPY --from=pwsh-source $PSHOME $PSHOME
+# COPY --from=pwsh-source $PSHOME $PSHOME
 
 SHELL ["pwsh.exe", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
 USER ContainerAdministrator
