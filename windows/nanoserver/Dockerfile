@@ -75,7 +75,7 @@ ENV PSHOME=${PSHOME}
 COPY --from=jdk-core /temp /windows/TEMP
 
 RUN SET
-RUN dir
+RUN dir C:
 RUN dir C:\windows\TEMP
 RUN IF NOT EXIST "C:\windows\TEMP" EXIT /B 1
 RUN IF NOT EXIST "C:\windows\TEMP\pwsh.exe" EXIT /B 1
