@@ -45,12 +45,12 @@ RUN Write-Output "dash-Output"
 ARG POWERSHELL_VERSION=7.5.4
 ENV POWERSHELL_VERSION=${POWERSHELL_VERSION}
 ENV PATH="$env:PATH;C:\Windows\system32;C:\Windows;C:\Program Files\PowerShell\7;"
-RUN New-Item -ItemType Directory -Path 'C:\mytemp' | Out-Null
+RUN New-Item -ItemType Directory -Path 'C:\temp' | Out-Null
 RUN $pwshUrl = 'https://github.com/PowerShell/PowerShell/releases/download/v{0}/PowerShell-{0}-win-x64.zip' -f $env:POWERSHELL_VERSION ; `
-    Invoke-WebRequest $pwshUrl -OutFile 'C:\mytemp\pwsh.zip'
+    Invoke-WebRequest $pwshUrl -OutFile 'C:\temp\pwsh.zip'
 RUN $powershellMajorVersion = $env:POWERSHELL_VERSION.substring(0,1) ; `
-    Expand-Archive -Path 'C:\mytemp\pwsh.zip' -DestinationPath 'C:\Program Files\PowerShell\{1}' -f $env:ProgramFiles, $powershellMajorVersion ; `
-    Remove-Item -Path C:\mytemp -Recurse | Out-Null
+    Expand-Archive -Path 'C:\temp\pwsh.zip' -DestinationPath 'C:\Program Files\PowerShell\{1}' -f $env:ProgramFiles, $powershellMajorVersion ; `
+    Remove-Item -Path C:\temp -Recurse | Out-Null
 
 ## Agent image target
 FROM mcr.microsoft.com/windows/servercore:"${WINDOWS_VERSION_TAG}" AS agent
