@@ -136,6 +136,7 @@ RUN [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tl
     & c:\mingit\mingw64\bin\git-lfs.exe install
 
 ARG user=jenkins
+ENV USER=${user}
 
 ARG AGENT_FILENAME=agent.jar
 ARG AGENT_HASH_FILENAME=$AGENT_FILENAME.sha1
@@ -167,8 +168,17 @@ RUN Invoke-WebRequest $('https://repo.jenkins-ci.org/public/org/jenkins-ci/main/
 RUN if ((Get-FileHash (Join-Path C:/ProgramData/Jenkins $env:AGENT_FILENAME) -Algorithm SHA1).Hash -ne (Get-Content (Join-Path C:/ProgramData/Jenkins $env:AGENT_HASH_FILENAME))) {exit 1}
 RUN Remove-Item -Force (Join-Path C:/ProgramData/Jenkins $env:AGENT_HASH_FILENAME)
 
+# ## Was not declared there at the beginning, but after USER $user
+# RUN New-Item -Type Directory $('{0}/.jenkins' -f $env:AGENT_ROOT) | Out-Null ; `
+#     New-Item -Type Directory $env:AGENT_WORKDIR | Out-Null
+#     icacls $('{0}/.jenkins' -f $env:AGENT_ROOT) /grant "$env:USER_NAME:(OI)(CI)F" ; \
+#     icacls $env:AGENT_WORKDIR /grant "$env:USER_NAME:(OI)(CI)F"
 
 USER $user
+
+# Was declared there at the beginning
+RUN New-Item -Type Directory $('{0}/.jenkins' -f $env:AGENT_ROOT) | Out-Null ; `
+    New-Item -Type Directory $env:AGENT_WORKDIR | Out-Null
 
 RUN New-Item -Type Directory $('{0}/.jenkins' -f $env:AGENT_ROOT) | Out-Null ; `
     New-Item -Type Directory $env:AGENT_WORKDIR | Out-Null
