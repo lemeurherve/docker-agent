@@ -109,7 +109,9 @@ ARG AGENT_HASH_FILENAME=$AGENT_FILENAME.sha1
 
 # Create a local user with no password and add it to the Administrators group
 RUN net accounts /maxpwage:unlimited
-RUN New-LocalUser -Name $env:USER -NoPassword -PasswordNeverExpires
+# ### -NoPassword not possible on nano?
+# RUN New-LocalUser -Name $env:USER -NoPassword -PasswordNeverExpires
+RUN net user $env:USER /add /expire:never /passwordreq:no
 RUN Add-LocalGroupMember -Group Administrators -Member $env:USER
 RUN New-Item -ItemType Directory -Path C:/ProgramData/Jenkins | Out-Null
 
