@@ -106,15 +106,19 @@ ENV USER=${myuser}
 ARG AGENT_FILENAME=agent.jar
 ARG AGENT_HASH_FILENAME=$AGENT_FILENAME.sha1
 
-# Create a local user with no password and add it to the Administrators group
-RUN net accounts /maxpwage:unlimited
-### -NoPassword not possible on nano?
-RUN New-LocalUser -Name $env:USER -PasswordNeverExpires
-# RUN New-LocalUser -Name $env:USER -NoPassword -PasswordNeverExpires
-# ### Original
-# RUN net user $env:USER /add /expire:never /passwordreq:no
-RUN Add-LocalGroupMember -Group Administrators -Member $env:USER
-RUN New-Item -ItemType Directory -Path C:/ProgramData/Jenkins | Out-Null
+# # Create a local user with no password and add it to the Administrators group
+# RUN net accounts /maxpwage:unlimited
+# ### -NoPassword not possible on nano?
+# RUN New-LocalUser -Name $env:USER -PasswordNeverExpires
+# # RUN New-LocalUser -Name $env:USER -NoPassword -PasswordNeverExpires
+# # ### Original
+# # RUN net user $env:USER /add /expire:never /passwordreq:no
+# RUN Add-LocalGroupMember -Group Administrators -Member $env:USER
+# RUN New-Item -ItemType Directory -Path C:/ProgramData/Jenkins | Out-Null
+RUN net accounts /maxpwage:unlimited ; `
+    net user "$env:USER" /add /expire:never /passwordreq:no ; `
+    net localgroup Administrators /add $env:USER ; `
+    New-Item -ItemType Directory -Path C:/ProgramData/Jenkins | Out-Null
 
 ARG AGENT_ROOT=C:/Users/$myuser
 ARG AGENT_WORKDIR=${AGENT_ROOT}/Work
