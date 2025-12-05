@@ -38,7 +38,7 @@ RUN New-Item -ItemType Directory -Path C:\temp | Out-Null ; `
     $proc.WaitForExit() ; `
     Remove-Item -Path C:\temp -Recurse | Out-Null
 
-FROM mcr.microsoft.com/powershell/nanoserver:"${WINDOWS_VERSION_TAG}" AS pwsh-source
+FROM mcr.microsoft.com/windows/powershell:nanoserver-"${WINDOWS_VERSION_TAG}" AS pwsh-source
 
 FROM mcr.microsoft.com/windows/servercore:"${WINDOWS_VERSION_TAG}" AS netapi-source
 
