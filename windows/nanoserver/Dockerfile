@@ -64,6 +64,8 @@ RUN If (Test-Path 'C:/windows/system32/netapi32.dll') { Write-Error "already exi
 RUN If (!(Test-Path "$env:PSHOME/netapi32.dll")) { Write-Error "netapi32.dll not found in PSHOME" }
 RUN If (!(Test-Path 'C:/windows/system32/netapi32.dll') { Move-Item $env:PSHOME/netapi32.dll 'C:/windows/system32/netapi32.dll' } Else { Write-Error "No $env:PSHOME/netapi32.dll or windows/system32/netapi32.dll alreay exists" }
 # RUN If (!(Test-Path 'C:/windows/system32/netapi32.dll') -And (Test-Path "$env:PSHOME/netapi32.dll")) { Move-Item "$env:PSHOME/netapi32.dll" 'C:/windows/system32/netapi32.dll' } Else { Write-Host "No $env:PSHOME/netapi32.dll or windows/system32/netapi32.dll alreay exists" }
+RUN If (!(Test-Path 'C:/windows/system32/netapi32.dll')) { Write-Error "not moved, doesn't exist: C:/windows/system32/netapi32.dll" }
+
 
 SHELL ["pwsh.exe", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
 USER ContainerAdministrator
