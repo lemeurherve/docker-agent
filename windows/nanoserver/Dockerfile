@@ -149,10 +149,10 @@ COPY --from=jdk-core $JAVA_HOME $JAVA_HOME
 ########## from dotnet-nano2022
 COPY --from=installer ["/powershell", "/Program Files/powershell"]
 
-# In order to set system PATH, ContainerAdministrator must be used
-USER ContainerAdministrator
-RUN setx /M PATH "%PATH%;C:\Program Files\powershell;C:\Program Files\MinGit\cmd"
-USER ContainerUser
+# # In order to set system PATH, ContainerAdministrator must be used
+# USER ContainerAdministrator
+# RUN setx /M PATH "%PATH%;C:\Program Files\powershell;C:\Program Files\MinGit\cmd"
+# USER ContainerUser
 ########## end of from dotnet-nano2022
 
 SHELL ["pwsh.exe", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
