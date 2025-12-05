@@ -26,7 +26,7 @@
 ARG REPO=mcr.microsoft.com/dotnet/aspnet
 
 # Installer image
-FROM mcr.microsoft.com/windows/servercore:ltsc2022-amd64 AS installer
+FROM mcr.microsoft.com/windows/servercore:ltsc2022 AS installer
 
 # Download MinGit
 RUN powershell -Command " `
