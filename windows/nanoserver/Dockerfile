@@ -41,9 +41,9 @@ RUN New-Item -ItemType Directory -Path C:\temp | Out-Null ; `
 FROM mcr.microsoft.com/powershell:nanoserver-"${TOOLS_WINDOWS_VERSION}" AS pwsh-source
 
 # ltsc <= 2022
-FROM mcr.microsoft.com/windows/servercore:"${WINDOWS_VERSION_TAG}" AS netapi-source
-# ltsc2025
-FROM mcr.microsoft.com/windows/nanoserver:"${WINDOWS_VERSION_TAG}" AS netapi-source2025
+FROM mcr.microsoft.com/windows/servercore:"${WINDOWS_VERSION_TAG}" AS netapi-source-ltsc2022
+# nanoserver-ltsc2025 includes netapi32.dll now
+FROM mcr.microsoft.com/windows/nanoserver:"${WINDOWS_VERSION_TAG}" AS netapi-source-ltsc2025
 ## nanoserver-ltsc2025 if WINDOWS_VERSION_TAG=ltsc2025
 # FROM "${NETAPI_SOURCE}":"${WINDOWS_VERSION_TAG}" AS netapi-source
 
@@ -60,8 +60,7 @@ ENV PATH="C:\Windows\system32;C:\Windows;${PSHOME};"
 # RUN if exist C:\windows\system32\netapi32.dll del /F /Q C:\windows\system32\netapi32.dll
 
 # The nanoserver image is nice and small, but we need a couple of things to get SSH working
-# COPY --from=netapi-source /windows/system32/netapi32.dll /windows/system32/netapi32.dll
-COPY --from=netapi-source2025 /windows/system32/netapi32.dll /windows/system32/netapi32.dll
+COPY --from=netapi-source-${WINDOWS_VERSION_TAG} /windows/system32/netapi32.dll /windows/system32/netapi32.dll
 COPY --from=jdk-core /windows/system32/whoami.exe /windows/system32/whoami.exe
 COPY --from=jdk-core $JAVA_HOME $JAVA_HOME
 COPY --from=pwsh-source $PSHOME $PSHOME
@@ -109,9 +108,11 @@ ARG AGENT_HASH_FILENAME=$AGENT_FILENAME.sha1
 
 # Create a local user with no password and add it to the Administrators group
 RUN net accounts /maxpwage:unlimited
-# ### -NoPassword not possible on nano?
+### -NoPassword not possible on nano?
+RUN New-LocalUser -Name $env:USER -PasswordNeverExpires
 # RUN New-LocalUser -Name $env:USER -NoPassword -PasswordNeverExpires
-RUN net user $env:USER /add /expire:never /passwordreq:no
+# ### Original
+# RUN net user $env:USER /add /expire:never /passwordreq:no
 RUN Add-LocalGroupMember -Group Administrators -Member $env:USER
 RUN New-Item -ItemType Directory -Path C:/ProgramData/Jenkins | Out-Null
 
