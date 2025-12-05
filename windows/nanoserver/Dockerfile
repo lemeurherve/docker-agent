@@ -62,7 +62,7 @@ ENV PATH="C:\Windows\system32;C:\Windows;${PSHOME};"
 # RUN if exist C:\windows\system32\netapi32.dll del /F /Q C:\windows\system32\netapi32.dll
 
 # The nanoserver image is nice and small, but we need a couple of things to get SSH working
-COPY --from=netapi-source-$src /windows/system32/netapi32.dll /windows/system32/netapi32.dll
+COPY --from=netapi-source-ltsc2025 /windows/system32/netapi32.dll /windows/system32/netapi32.dll
 COPY --from=jdk-core /windows/system32/whoami.exe /windows/system32/whoami.exe
 COPY --from=jdk-core $JAVA_HOME $JAVA_HOME
 COPY --from=pwsh-source $PSHOME $PSHOME
