@@ -23,7 +23,7 @@
 #  THE SOFTWARE.
 
 ARG WINDOWS_VERSION_TAG=ltsc2019
-# ARG TOOLS_WINDOWS_VERSION=1809
+ARG TOOLS_WINDOWS_VERSION=1809
 FROM mcr.microsoft.com/windows/servercore:"${WINDOWS_VERSION_TAG}" AS jdk-core
 
 # $ProgressPreference: https://github.com/PowerShell/PowerShell/issues/2138#issuecomment-251261324
@@ -38,81 +38,23 @@ RUN New-Item -ItemType Directory -Path C:\temp | Out-Null ; `
     $proc.WaitForExit() ; `
     Remove-Item -Path C:\temp -Recurse | Out-Null
 
-
-# # Download and install PowerShell 7
-# ARG POWERSHELL_VERSION=7.5.4
-# ENV POWERSHELL_VERSION=${POWERSHELL_VERSION}
-# ENV PATH="C:\Windows\system32;C:\Windows;C:\Program Files\Powershell;"
-# RUN curl.exe --silent --location "https://github.com/PowerShell/PowerShell/releases/download/v%POWERSHELL_VERSION%/PowerShell-%POWERSHELL_VERSION%-win-x64.zip" --output C:/windows/TEMP/pwsh.zip `
-# && mkdir "C:\Program Files\Powershell" `
-# && tar.exe -xf C:\windows\TEMP\pwsh.zip -C "C:\Program Files\Powershell" `
-# && if exist "C:\windows\TEMP\pwsh.zip" del "C:\windows\TEMP\pwsh.zip"
-
-# Download PowerShell 7
-ARG POWERSHELL_VERSION=7.5.4
-ENV POWERSHELL_VERSION=${POWERSHELL_VERSION}
-# Using $env:ProgramFile\Powershell7 for best results
-# Ref: https://learn.microsoft.com/en-us/powershell/scripting/install/install-powershell-on-windows?view=powershell-7.5#install-from-the-zip-package
-ARG PSHOME="C:\Program Files\PowerShell"
-RUN New-Item -ItemType Directory -Path 'C:\temp' | Out-Null ; `
-    $pwshUrl = 'https://github.com/PowerShell/PowerShell/releases/download/v{0}/PowerShell-{0}-win-x64.zip' -f $env:POWERSHELL_VERSION ; `
-    Invoke-WebRequest $pwshUrl -OutFile 'C:\temp\pwsh.zip' ; `
-    Expand-Archive -Path 'C:\temp\pwsh.zip' -DestinationPath 'C:\temp' ; `
-    Remove-Item -Path 'C:\temp\pwsh.zip' | Out-Null
-
-RUN if (Test-Path $('C:\temp\pwsh.exe')) { Write-Host "File exists." } else { throw "File does not exist." }
+FROM mcr.microsoft.com/powershell:nanoserver-"${TOOLS_WINDOWS_VERSION}" AS pwsh-source
 
 ## Agent image target
 FROM mcr.microsoft.com/windows/nanoserver:"${WINDOWS_VERSION_TAG}" AS agent
 
-SHELL ["cmd.exe", "/c"]
-
 ARG JAVA_HOME="C:\openjdk-17"
-ENV PSHOME=${PSHOME}
-
-# Windows Server Core doesn't allow copying from C:\Program Files\
-COPY --from=jdk-core /temp /temp
-
-RUN SET
-RUN dir C:
-RUN cd
-# OK \o/
-RUN dir temp
-RUN dir C:\Windows
-RUN echo %PSHOME%
-
-# RUN move C:\temp\* "C:\Program Files\PowerShell" && rmdir C:\temp
-# RUN move C:\temp\* "C:\Program Files\PowerShell"
-RUN xcopy "C:\temp" "C:\Program Files\PowerShell" /E /I /H /Y
-
-# RUN robocopy "C:\temp" "%PSHOME%" /E /MOVE /COPYALL && rmdir "C:\temp"
-# RUN robocopy "C:\temp" %PSHOME% /E /MOVE /COPYALL && rmdir "C:\temp"
-# RUN move C:\temp\* %PSHOME%
-# RUN move C:\temp\* "C:\Program Files\PowerShell"
-
-ENV PATH="C:\Windows\system32;C:\Windows;C:\Program Files\PowerShell;"
+ENV PSHOME="C:\Program Files\PowerShell"
+ENV PATH="C:\Windows\system32;C:\Windows;${PSHOME};"
 
 # The nanoserver image is nice and small, but we need additional dependencies for PowerShell and SSH
 COPY --from=jdk-core /windows/system32/netapi32.dll /windows/system32/netapi32.dll
 COPY --from=jdk-core /windows/system32/whoami.exe /windows/system32/whoami.exe
-COPY --from=jdk-core /windows/system32/icacls.exe /windows/system32/icacls.exe
-# Additional DLLs required for PowerShell from GitHub releases to work on nanoserver
-COPY --from=jdk-core /windows/system32/msvcr120.dll /windows/system32/msvcr120.dll
-COPY --from=jdk-core /windows/system32/msvcp120.dll /windows/system32/msvcp120.dll
-COPY --from=jdk-core /windows/system32/vcruntime140.dll /windows/system32/vcruntime140.dll
-COPY --from=jdk-core /windows/system32/msvcp140.dll /windows/system32/msvcp140.dll
-COPY --from=jdk-core /windows/system32/samcli.dll /windows/system32/samcli.dll
-COPY --from=jdk-core /windows/system32/samlib.dll /windows/system32/samlib.dll
 COPY --from=jdk-core $JAVA_HOME $JAVA_HOME
-# COPY --from=pwsh-source $PSHOME $PSHOME
+COPY --from=pwsh-source $PSHOME $PSHOME
 
 SHELL ["pwsh.exe", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
 USER ContainerAdministrator
-
-RUN Write-Output "ARE WE THERE YET?"
-RUN Write-Output "ARE WE THERE YET again?"
-RUN Write-Output $env:PSHOME
-RUN Get-ChildItem env: | ConvertTo-Json
 
 ARG GIT_VERSION=2.52.0
 ARG GIT_PATCH_VERSION=1
@@ -128,8 +70,7 @@ RUN [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tl
 ENV ProgramFiles="C:\Program Files" `
     WindowsPATH="C:\Windows\system32;C:\Windows" `
     JAVA_HOME="${JAVA_HOME}"
-ENV PATH="${PATH};${WindowsPATH};${PSHOME};${JAVA_HOME}\bin;C:\mingit\cmd"
-RUN Get-ChildItem env:PATH | ConvertTo-Json -Depth 1
+ENV PATH="${WindowsPATH};${ProgramFiles}\PowerShell;${JAVA_HOME}\bin;C:\mingit\cmd"
 
 ARG GIT_LFS_VERSION=3.7.1
 RUN [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 ; `
@@ -143,13 +84,10 @@ RUN [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tl
     Remove-Item GitLfs.zip -Force ; `
     & c:\mingit\mingw64\bin\git-lfs.exe install
 
-ARG IMAGE_USER=jenkins
-ENV USER=${IMAGE_USER}
+ARG user=jenkins
 
 ARG AGENT_FILENAME=agent.jar
 ARG AGENT_HASH_FILENAME=$AGENT_FILENAME.sha1
-
-RUN Get-ChildItem env: | ConvertTo-Json
 
 RUN net accounts /maxpwage:unlimited ; `
     net user "$env:USER" /add /expire:never /passwordreq:no ; `
@@ -157,12 +95,10 @@ RUN net accounts /maxpwage:unlimited ; `
     New-Item -ItemType Directory -Path C:/ProgramData/Jenkins | Out-Null
 
 
-ARG AGENT_ROOT=C:/Users/$IMAGE_USER
+ARG AGENT_ROOT=C:/Users/$user
 ARG AGENT_WORKDIR=${AGENT_ROOT}/Work
 
 ENV AGENT_WORKDIR=${AGENT_WORKDIR}
-
-RUN Get-ChildItem env: | ConvertTo-Json
 
 # Get the Agent from the Jenkins Artifacts Repository
 ARG VERSION=3355.v388858a_47b_33
@@ -172,19 +108,10 @@ RUN [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tl
     if ((Get-FileHash (Join-Path C:/ProgramData/Jenkins $env:AGENT_FILENAME) -Algorithm SHA1).Hash -ne (Get-Content (Join-Path C:/ProgramData/Jenkins $env:AGENT_HASH_FILENAME))) {exit 1} ; `
     Remove-Item -Force (Join-Path C:/ProgramData/Jenkins $env:AGENT_HASH_FILENAME)
 
-# Create user home directory and register profile with Windows
-RUN $profilePath = $env:AGENT_ROOT ; `
-    New-Item -Type Directory -Path $profilePath -Force | Out-Null ; `
-    New-Item -Type Directory -Path $('{0}/.jenkins' -f $profilePath) -Force | Out-Null ; `
-    New-Item -Type Directory -Path $env:AGENT_WORKDIR -Force | Out-Null ; `
-    icacls $profilePath /grant ('{0}:(OI)(CI)F' -f $env:USER) /T ; `
-    $userAccount = New-Object System.Security.Principal.NTAccount($env:USER) ; `
-    $sid = $userAccount.Translate([System.Security.Principal.SecurityIdentifier]).Value ; `
-    $profileListPath = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\{0}' -f $sid ; `
-    New-Item -Path $profileListPath -Force | Out-Null ; `
-    New-ItemProperty -Path $profileListPath -Name 'ProfileImagePath' -Value $profilePath -PropertyType String -Force | Out-Null
+USER $user
 
-USER $IMAGE_USER
+RUN New-Item -Type Directory $('{0}/.jenkins' -f $env:AGENT_ROOT) | Out-Null ; `
+    New-Item -Type Directory $env:AGENT_WORKDIR | Out-Null
 
 RUN git config --system core.longpaths true ; `
     Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem' -Name LongPathsEnabled -type DWord -Value 1
@@ -192,6 +119,7 @@ RUN git config --system core.longpaths true ; `
 VOLUME "${AGENT_ROOT}"/.jenkins
 VOLUME "${AGENT_WORKDIR}"
 WORKDIR "${AGENT_ROOT}"
+ENV USER=${user}
 LABEL `
     org.opencontainers.image.vendor="Jenkins project" `
     org.opencontainers.image.title="Official Jenkins Agent Base Docker image" `
