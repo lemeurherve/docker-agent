@@ -49,7 +49,6 @@ ENV PATH="C:\Windows\system32;C:\Windows;${PSHOME};"
 
 # nanoserver-ltsc2025 includes netapi32.dll, deleting it
 # as not as easy to conditionally copy it from a tmp folder in RUN commands otherwise
-RUN if exist C:\windows\system32\netapi32.dll exit /b 3
 # RUN if exist C:\Windows\System32\netapi32.dll del /F /Q C:\Windows\System32\netapi32.dll
 RUN if exist C:\windows\system32\netapi32.dll del /F /Q C:\windows\system32\netapi32.dll
 # The nanoserver image is nice and small, but we need a couple of things to get SSH working
