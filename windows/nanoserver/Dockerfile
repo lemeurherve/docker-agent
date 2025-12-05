@@ -44,6 +44,7 @@ FROM mcr.microsoft.com/powershell:nanoserver-"${TOOLS_WINDOWS_VERSION}" AS pwsh-
 FROM mcr.microsoft.com/windows/nanoserver:"${WINDOWS_VERSION_TAG}" AS agent
 
 SHELL ["cmd.exe", "/c"]
+# USER ContainerAdministrator
 
 ARG JAVA_HOME="C:\openjdk-17"
 ENV PSHOME="C:\Program Files\PowerShell"
@@ -53,19 +54,13 @@ ENV PATH="C:\Windows\system32;C:\Windows;${PSHOME};"
 COPY --from=jdk-core /windows/system32/whoami.exe /windows/system32/whoami.exe
 COPY --from=jdk-core $JAVA_HOME $JAVA_HOME
 COPY --from=pwsh-source $PSHOME $PSHOME
-
-SHELL ["pwsh.exe", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
-
 # While nanoserver-ltsc2025 includes netapi32.dll, older versions don't
-RUN If (Test-Path 'C:/windows/system32/netapi32.dll') { Remove-Item 'C:/windows/system32/netapi32.dll' -Force }
-
+RUN if exist C:\Windows\System32\netapi32.dll del /F /Q C:\Windows\System32\netapi32.dll
 COPY --from=jdk-core /windows/system32/netapi32.dll /windows/system32/netapi32.dll
-
-RUN If (!(Test-Path 'C:/windows/system32/netapi32.dll')) { Write-Error "doesn't exist: C:/windows/system32/netapi32.dll" }
-
 
 SHELL ["pwsh.exe", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
 USER ContainerAdministrator
+RUN If (!(Test-Path 'C:/windows/system32/netapi32.dll')) { Write-Error "doesn't exist: C:/windows/system32/netapi32.dll" }
 
 ARG GIT_VERSION=2.52.0
 ARG GIT_PATCH_VERSION=1
