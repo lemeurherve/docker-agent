@@ -65,6 +65,7 @@ COPY --from=netapi-source2025 /windows/system32/netapi32.dll /windows/system32/n
 COPY --from=jdk-core /windows/system32/whoami.exe /windows/system32/whoami.exe
 COPY --from=jdk-core $JAVA_HOME $JAVA_HOME
 COPY --from=pwsh-source $PSHOME $PSHOME
+COPY --from=jdk-core /windows/system32/WindowsPowerShell/v1.0/Modules/Microsoft.PowerShell.LocalAccounts $PSHOME/Modules/Microsoft.PowerShell.LocalAccounts
 
 # Verify copy succeeded (fail build if missing)
 RUN if not exist C:\Windows\System32\netapi32.dll ( echo "ERROR: netapi32.dll is missing!" && exit /b 1 )
