@@ -24,8 +24,8 @@
 
 ARG WINDOWS_VERSION_TAG=ltsc2019
 ARG TOOLS_WINDOWS_VERSION=1809
-FROM mcr.microsoft.com/windows/servercore:"${WINDOWS_VERSION_TAG}" AS jdk-core
 FROM mcr.microsoft.com/windows/servercore:"${WINDOWS_VERSION_TAG}" AS netapi-source
+FROM mcr.microsoft.com/windows/servercore:"${WINDOWS_VERSION_TAG}" AS jdk-core
 
 # $ProgressPreference: https://github.com/PowerShell/PowerShell/issues/2138#issuecomment-251261324
 SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
