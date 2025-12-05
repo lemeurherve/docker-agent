@@ -120,6 +120,14 @@ RUN net accounts /maxpwage:unlimited ; `
     net localgroup Administrators /add $env:USER ; `
     New-Item -ItemType Directory -Path C:/ProgramData/Jenkins | Out-Null
 
+
+RUN net user
+
+## From https://www.itprotoday.com/microsoft-windows/how-are-local-accounts-created-on-nano-server
+# $securePassword = ConvertTo-SecureString "Pa55word" -AsPlainText -Force
+# New-LocalUser -Name "johnloc" -Password $securePassword -FullName "John Savill" -Description "John Savill Local Account"
+# Add-LocalGroupMember -Group "Administrators" -Member "johnloc"
+
 ARG AGENT_ROOT=C:/Users/$myuser
 ARG AGENT_WORKDIR=${AGENT_ROOT}/Work
 
