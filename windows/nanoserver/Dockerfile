@@ -58,7 +58,7 @@ SHELL ["pwsh.exe", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPrefer
 
 # While nanoserver-ltsc2025 includes netapi32.dll, older versions don't
 COPY --from=jdk-core /windows/system32/netapi32.dll $PSHOME/netapi32.dll
-RUN If (!(Test-Path 'C:/windows/system32/netapi32.dll')) { Write-Error 2 }
+# RUN If (!(Test-Path 'C:/windows/system32/netapi32.dll')) { Write-Error 2 } ## OK, doesn't exist
 RUN If (Test-Path "$env:PSHOME/netapi32.dll") { Write-Error 3 }
 RUN If (!(Test-Path "$env:PSHOME/netapi32.dll")) { Write-Error 4 }
 RUN If (!(Test-Path 'C:/windows/system32/netapi32.dll') -And (Test-Path "$env:PSHOME/netapi32.dll")) { Move-Item "$env:PSHOME/netapi32.dll" 'C:/windows/system32/netapi32.dll' } Else { Write-Host "No $env:PSHOME/netapi32.dll or windows/system32/netapi32.dll alreay exists" }
