@@ -43,16 +43,31 @@ FROM mcr.microsoft.com/powershell:nanoserver-"${TOOLS_WINDOWS_VERSION}" AS pwsh-
 ## Agent image target
 FROM mcr.microsoft.com/windows/nanoserver:"${WINDOWS_VERSION_TAG}" AS agent
 
+# Use ContainerAdministrator to modify System32
+USER ContainerAdministrator
+SHELL ["cmd.exe", "/c"]
+# Optional: remove existing netapi32.dll if present
+RUN if exist C:\Windows\System32\netapi32.dll del /F /Q C:\Windows\System32\netapi32.dll
+
+# Verify removal (fail build if still exists)
+RUN if exist C:\Windows\System32\netapi32.dll ( echo "ERROR: netapi32.dll could not be removed!" && exit /b 1 )
+
+# Copy DLL from ServerCore stage
+COPY --from=jdk-core /windows/system32/netapi32.dll /windows/system32/netapi32.dll
+
+# Verify copy succeeded (fail build if missing)
+RUN if not exist C:\Windows\System32\netapi32.dll ( echo "ERROR: netapi32.dll is missing!" && exit /b 1 )
+
 ARG JAVA_HOME="C:\openjdk-17"
 ENV PSHOME="C:\Program Files\PowerShell"
 ENV PATH="C:\Windows\system32;C:\Windows;${PSHOME};"
 
-# nanoserver-ltsc2025 includes netapi32.dll, deleting it
-# as not as easy to conditionally copy it from a tmp folder in RUN commands otherwise
-# RUN if exist C:\Windows\System32\netapi32.dll del /F /Q C:\Windows\System32\netapi32.dll
-RUN if exist C:\windows\system32\netapi32.dll del /F /Q C:\windows\system32\netapi32.dll
-# The nanoserver image is nice and small, but we need a couple of things to get SSH working
-COPY --from=jdk-core /windows/system32/netapi32.dll /windows/system32/netapi32.dll
+# # nanoserver-ltsc2025 includes netapi32.dll, deleting it
+# # as not as easy to conditionally copy it from a tmp folder in RUN commands otherwise
+# # RUN if exist C:\Windows\System32\netapi32.dll del /F /Q C:\Windows\System32\netapi32.dll
+# RUN if exist C:\windows\system32\netapi32.dll del /F /Q C:\windows\system32\netapi32.dll
+# # The nanoserver image is nice and small, but we need a couple of things to get SSH working
+# COPY --from=jdk-core /windows/system32/netapi32.dll /windows/system32/netapi32.dll
 COPY --from=jdk-core /windows/system32/whoami.exe /windows/system32/whoami.exe
 COPY --from=jdk-core $JAVA_HOME $JAVA_HOME
 COPY --from=pwsh-source $PSHOME $PSHOME
