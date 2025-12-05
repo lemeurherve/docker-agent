@@ -24,7 +24,6 @@
 
 ARG WINDOWS_VERSION_TAG=ltsc2019
 ARG TOOLS_WINDOWS_VERSION=1809
-FROM mcr.microsoft.com/windows/servercore:"${WINDOWS_VERSION_TAG}" AS netapi-source
 FROM mcr.microsoft.com/windows/servercore:"${WINDOWS_VERSION_TAG}" AS jdk-core
 
 # $ProgressPreference: https://github.com/PowerShell/PowerShell/issues/2138#issuecomment-251261324
@@ -39,8 +38,9 @@ RUN New-Item -ItemType Directory -Path C:\temp | Out-Null ; `
     $proc.WaitForExit() ; `
     Remove-Item -Path C:\temp -Recurse | Out-Null
 
-# FROM mcr.microsoft.com/powershell:nanoserver-"${TOOLS_WINDOWS_VERSION}" AS pwsh-source
 FROM mcr.microsoft.com/windows/nanoserver:"${WINDOWS_VERSION_TAG}" AS pwsh-source
+
+FROM mcr.microsoft.com/windows/servercore:"${WINDOWS_VERSION_TAG}" AS netapi-source
 
 ## Agent image target
 FROM mcr.microsoft.com/windows/nanoserver:"${WINDOWS_VERSION_TAG}" AS agent
