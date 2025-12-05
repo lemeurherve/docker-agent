@@ -56,6 +56,7 @@ COPY --from=pwsh-source $PSHOME $PSHOME
 
 SHELL ["pwsh.exe", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
 
+RUN If (Test-Path 'C:/windows/system32/netapi32.dll') { Remove-Item 'C:/windows/system32/netapi32.dll' -Force }
 # While nanoserver-ltsc2025 includes netapi32.dll, older versions don't
 COPY --from=jdk-core /windows/system32/netapi32.dll /temp/netapi32.dll
 RUN If (Test-Path 'C:/windows/system32/netapi32.dll') { Write-Error "already exist: C:/windows/system32/netapi32.dll" }
