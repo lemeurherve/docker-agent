@@ -47,6 +47,9 @@ ARG JAVA_HOME="C:\openjdk-17"
 ENV PSHOME="C:\Program Files\PowerShell"
 ENV PATH="C:\Windows\system32;C:\Windows;${PSHOME};"
 
+# While nanoserver-ltsc2025 includes netapi32.dll, older versions don't
+RUN if exist C:\Windows\System32\netapi32.dll del /F /Q C:\Windows\System32\netapi32.dll
+RUN if exist C:\windows\system32\netapi32.dll del /F /Q C:\windows\system32\netapi32.dll
 # The nanoserver image is nice and small, but we need a couple of things to get SSH working
 COPY --from=jdk-core /windows/system32/netapi32.dll /windows/system32/netapi32.dll
 COPY --from=jdk-core /windows/system32/whoami.exe /windows/system32/whoami.exe
