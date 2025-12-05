@@ -86,36 +86,36 @@ RUN powershell -Command " `
             | Remove-Item -Force -Recurse"
 
 
-# SDK image
-FROM $REPO:10.0.0-nanoserver-ltsc2022
+# # SDK image
+# FROM $REPO:10.0.0-nanoserver-ltsc2022
 
-ENV `
-    # Do not generate certificate
-    DOTNET_GENERATE_ASPNET_CERTIFICATE=false `
-    # Do not show first run text
-    DOTNET_NOLOGO=true `
-    # SDK version
-    DOTNET_SDK_VERSION=10.0.100 `
-    # Enable correct mode for dotnet watch (only mode supported in a container)
-    DOTNET_USE_POLLING_FILE_WATCHER=true `
-    # Skip extraction of XML docs - generally not useful within an image/container - helps performance
-    NUGET_XMLDOC_MODE=skip `
-    # PowerShell telemetry for docker image usage
-    POWERSHELL_DISTRIBUTION_CHANNEL=PSDocker-DotnetSDK-NanoServer-ltsc2022 `
-    # Workaround for https://github.com/PowerShell/PowerShell/issues/20685
-    DOTNET_ROLL_FORWARD=Major
+# ENV `
+#     # Do not generate certificate
+#     DOTNET_GENERATE_ASPNET_CERTIFICATE=false `
+#     # Do not show first run text
+#     DOTNET_NOLOGO=true `
+#     # SDK version
+#     DOTNET_SDK_VERSION=10.0.100 `
+#     # Enable correct mode for dotnet watch (only mode supported in a container)
+#     DOTNET_USE_POLLING_FILE_WATCHER=true `
+#     # Skip extraction of XML docs - generally not useful within an image/container - helps performance
+#     NUGET_XMLDOC_MODE=skip `
+#     # PowerShell telemetry for docker image usage
+#     POWERSHELL_DISTRIBUTION_CHANNEL=PSDocker-DotnetSDK-NanoServer-ltsc2022 `
+#     # Workaround for https://github.com/PowerShell/PowerShell/issues/20685
+#     DOTNET_ROLL_FORWARD=Major
 
-########## from dotnet-nano2022
-# In order to set system PATH, ContainerAdministrator must be used
-USER ContainerAdministrator
-RUN setx /M PATH "%PATH%;C:\Program Files\powershell;C:\Program Files\MinGit\cmd"
-USER ContainerUser
+# ########## from dotnet-nano2022
+# # In order to set system PATH, ContainerAdministrator must be used
+# USER ContainerAdministrator
+# RUN setx /M PATH "%PATH%;C:\Program Files\powershell;C:\Program Files\MinGit\cmd"
+# USER ContainerUser
 
-COPY --from=installer ["/dotnet", "/Program Files/dotnet"]
-COPY --from=installer ["/powershell", "/Program Files/powershell"]
-COPY --from=installer ["/MinGit", "/Program Files/MinGit"]
-########## end from dotnet-nano2022
-########################
+# COPY --from=installer ["/dotnet", "/Program Files/dotnet"]
+# COPY --from=installer ["/powershell", "/Program Files/powershell"]
+# COPY --from=installer ["/MinGit", "/Program Files/MinGit"]
+# ########## end from dotnet-nano2022
+# ########################
 
 ARG WINDOWS_VERSION_TAG=ltsc2019
 ARG TOOLS_WINDOWS_VERSION=1809
@@ -146,7 +146,14 @@ ENV PATH="C:\Windows\system32;C:\Windows;${PSHOME};"
 COPY --from=jdk-core /windows/system32/netapi32.dll /windows/system32/netapi32.dll
 COPY --from=jdk-core /windows/system32/whoami.exe /windows/system32/whoami.exe
 COPY --from=jdk-core $JAVA_HOME $JAVA_HOME
+########## from dotnet-nano2022
 COPY --from=installer ["/powershell", "/Program Files/powershell"]
+
+# In order to set system PATH, ContainerAdministrator must be used
+USER ContainerAdministrator
+RUN setx /M PATH "%PATH%;C:\Program Files\powershell;C:\Program Files\MinGit\cmd"
+USER ContainerUser
+########## end of from dotnet-nano2022
 
 SHELL ["pwsh.exe", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
 USER ContainerAdministrator
