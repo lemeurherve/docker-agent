@@ -25,7 +25,7 @@
 ARG WINDOWS_VERSION_TAG=ltsc2019
 ARG TOOLS_WINDOWS_VERSION=1809
 FROM mcr.microsoft.com/windows/servercore:"${WINDOWS_VERSION_TAG}" AS jdk-core
-FROM mcr.microsoft.com/windows/servercore:"${WINDOWS_VERSION_TAG}" AS netapi
+FROM mcr.microsoft.com/windows/servercore:"${WINDOWS_VERSION_TAG}" AS netapi-source
 
 # $ProgressPreference: https://github.com/PowerShell/PowerShell/issues/2138#issuecomment-251261324
 SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
@@ -55,7 +55,7 @@ ENV PATH="C:\Windows\system32;C:\Windows;${PSHOME};"
 # RUN if exist C:\windows\system32\netapi32.dll del /F /Q C:\windows\system32\netapi32.dll
 
 # The nanoserver image is nice and small, but we need a couple of things to get SSH working
-COPY --from=netapi /windows/system32/netapi32.dll /windows/system32/netapi32.dll
+COPY --from=netapi-source /windows/system32/netapi32.dll /windows/system32/netapi32.dll
 COPY --from=jdk-core /windows/system32/whoami.exe /windows/system32/whoami.exe
 COPY --from=jdk-core $JAVA_HOME $JAVA_HOME
 COPY --from=pwsh-source $PSHOME $PSHOME
