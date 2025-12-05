@@ -47,7 +47,7 @@ FROM mcr.microsoft.com/windows/nanoserver:"${WINDOWS_VERSION_TAG}" AS agent
 USER ContainerAdministrator
 SHELL ["cmd.exe", "/c"]
 # Optional: remove existing netapi32.dll if present
-RUN if exist C:\Windows\System32\netapi32.dll del /F /Q C:\Windows\System32\netapi32.dll
+RUN if exist C:\windows\system32\netapi32.dll del /F /Q C:\windows\system32\netapi32.dll
 
 # Verify removal (fail build if still exists)
 RUN if exist C:\Windows\System32\netapi32.dll ( echo "ERROR: netapi32.dll could not be removed!" && exit /b 1 )
