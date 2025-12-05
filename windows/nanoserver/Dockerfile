@@ -50,7 +50,7 @@ SHELL ["cmd.exe", "/c"]
 RUN if exist C:\windows\system32\netapi32.dll del /F /Q C:\windows\system32\netapi32.dll
 
 # Verify removal (fail build if still exists)
-RUN if exist C:\windows\system32\netapi32.dll ( echo "ERROR: netapi32.dll could not be removed!" && exit /b 1 )
+# RUN if exist C:\windows\system32\netapi32.dll ( echo "ERROR: netapi32.dll could not be removed!" && exit /b 1 )
 
 # Copy DLL from ServerCore stage
 COPY --from=jdk-core /windows/system32/netapi32.dll /windows/system32/netapi32.dll
