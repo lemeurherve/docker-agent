@@ -14,13 +14,8 @@ def agentSelector(String imageType, retryCounter) {
             platform = 'windows-2019'
             break
 
-        // nanoserver-ltsc2022 and windowservercore-ltsc2022
-        case ~/.*2022/:
-            platform = 'windows-2022'
-            break
-
-        // nanoserver-ltsc2025 and windowservercore-ltsc2025
-        case ~/.*2025/:
+        // All other Windows images
+        case ~/(nanoserver|windowsservercore).*/:
             platform = 'windows-2025'
             break
 
