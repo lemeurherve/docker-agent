@@ -122,6 +122,13 @@ function Test-Image {
     return $failed
 }
 
+function Get-DockerInfo() {
+    # System information
+    Get-ComputerInfo | Select-Object OsName, OsBuildNumber, WindowsVersion
+    Get-WindowsFeature Containers | Out-String
+    docker info
+}
+
 function Initialize-DockerComposeFile {
     param (
         [String] $AgentType,
@@ -171,9 +178,8 @@ Test-CommandExists 'docker-compose'
 Test-CommandExists 'docker buildx'
 Test-CommandExists 'yq'
 
-if ($Target -eq 'docker-init') {
-    Write-Host '= INIT: docker info below'
-    docker info
+if($target -eq 'docker-init') {
+    Get-DockerInfo
 }
 
 foreach($agentType in $AgentTypes) {
