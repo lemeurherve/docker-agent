@@ -264,5 +264,3 @@ if ($lastExitCode -ne 0) {
     Write-Host '= Build finished successfully'
 }
 exit $lastExitCode
-
-
