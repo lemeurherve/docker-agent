@@ -218,7 +218,7 @@ foreach($agentType in $AgentTypes) {
                     icacls $module /grant Administrators:'F' /inheritance:d /T
                     Remove-Item -Path $module -Recurse -Force -Confirm:$false
                 }
-                Install-Module -Force -Name Pester -MaximumVersion 5.3.3
+                Install-Module -Force -Name Pester -MaximumVersion 5.3.3 -Scope CurrentUser
             }
 
             Import-Module Pester
@@ -271,3 +271,4 @@ if ($lastExitCode -ne 0) {
     Write-Host '= Build finished successfully'
 }
 exit $lastExitCode
+
