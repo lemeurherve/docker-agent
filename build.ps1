@@ -122,20 +122,13 @@ function Test-Image {
     return $failed
 }
 
-function Initialize-Docker() {
+function Get-DockerInfo() {
     docker info
-    # Cf https://github.com/jenkins-infra/jenkins-infra/blob/production/modules/profile/templates/jenkinscontroller/casc/clouds-ec2.yaml.erb
-    $dockerDaemonConfigPath = 'C:\ProgramData\Docker\config\daemon.json'
-    if (Test-Path $dockerDaemonConfigPath) {
-        $dockerDaemonConfig = Get-Content -Path $dockerDaemonConfigPath -Raw | ConvertFrom-Json
-        Write-Host "${dockerDaemonConfigPath} file content:"
-        $dockerDaemonConfig | ConvertTo-Json
-    }
-    # System information
+
+    # Additional system information
     Get-ComputerInfo | Select-Object OsName, OsBuildNumber, WindowsVersion
     Get-CimInstance -ClassName Win32_Processor | Out-String
     Get-WindowsFeature Containers | Out-String
-    docker info
 }
 
 function Initialize-DockerComposeFile {
@@ -190,7 +183,7 @@ Test-CommandExists 'docker buildx'
 Test-CommandExists 'yq'
 
 if($target -eq 'docker-init') {
-    Initialize-Docker
+    Get-DockerInfo
 }
 
 foreach($agentType in $AgentTypes) {
