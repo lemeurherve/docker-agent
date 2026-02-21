@@ -156,8 +156,6 @@ function Set-DockerIsolation($imageType) {
     if ($builder -eq "win-hyperv") {
         docker buildx create --name win-hyperv --driver docker --driver-opt isolation=hyperv --use
         $env:BUILDKIT_SANDBOX_ISOLATION="hyperv"
-        docker info
-        docker buildx inspect
     }
 }
 
