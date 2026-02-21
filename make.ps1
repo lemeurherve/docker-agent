@@ -131,6 +131,29 @@ function Get-DockerInfo() {
     docker buildx inspect
 }
 
+function Set-DockerIsolation($imageType) {
+    $windowsVersion = $ImageType.Split('-')[1]
+    switch ($windowsVersion) {
+        {$_ -match "ltsc2019|ltsc2022"} {
+            Write-Host " = Building legacy Windows images, Hyper-V isolation required"
+            $builder = "win-hyperv"
+        }
+        {$_ -match "ltsc2025"} {
+            Write-Host " = Building native Windows images, using process isolation"
+            $builder = "win-hyperv"
+        }
+        default {
+            Write-Host " = Building unknown Windows images, Hyper-V isolation required"
+            $builder = "win-hyperv"
+        }
+    }
+    if ($builder -eq "win-hyperv") {
+        docker buildx create --name win-hyperv --driver docker-container --driver-opt isolation=hyperv --use
+        docker info
+        docker buildx inspect
+    }
+}
+
 function Initialize-DockerComposeFile {
     param (
         [String] $AgentType,
@@ -182,6 +205,7 @@ Test-CommandExists 'yq'
 
 if($target -eq 'docker-init') {
     Get-DockerInfo
+    Set-DockerIsolation $ImageType
 }
 
 foreach($agentType in $AgentTypes) {
