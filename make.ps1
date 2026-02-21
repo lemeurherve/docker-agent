@@ -134,6 +134,7 @@ function Get-DockerInfo() {
     }
     docker info
     docker buildx inspect
+    docker buildx ls
 }
 
 function Set-DockerIsolation($imageType) {
