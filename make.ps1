@@ -127,6 +127,7 @@ function Get-DockerInfo() {
     Get-ComputerInfo | Select-Object OsName, OsBuildNumber, WindowsVersion
     Get-WindowsFeature Containers | Out-String
     docker info
+    docker buildx inspect
 }
 
 function Initialize-DockerComposeFile {
