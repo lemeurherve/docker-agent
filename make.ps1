@@ -126,7 +126,6 @@ function Get-DockerInfo() {
     # System information
     Get-ComputerInfo | Select-Object OsName, OsBuildNumber, WindowsVersion
     Get-WindowsFeature Containers | Out-String
-    Get-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V-All
     docker info
     docker buildx inspect
 }
