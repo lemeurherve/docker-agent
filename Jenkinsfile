@@ -16,7 +16,7 @@ def agentSelector(String imageType, retryCounter) {
 
         // All other Windows images
         case ~/(nanoserver|windowsservercore).*/:
-            platform = 'windows-2025'
+            platform = 'infratest-windows'
             break
 
         // Linux
