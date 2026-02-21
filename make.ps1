@@ -126,6 +126,12 @@ function Get-DockerInfo() {
     # System information
     Get-ComputerInfo | Select-Object OsName, OsBuildNumber, WindowsVersion
     Get-WindowsFeature Containers | Out-String
+    $capable = (Get-ComputerInfo).HyperVRequirementVirtualizationFirmwareEnabled
+    if (-not $capable) {
+        Write-Host "This VM does not support nested virtualization with Hyper-V"
+    } else {
+        Write-Host "This VM supports nested virtualization with Hyper-V"
+    }
     docker info
     docker buildx inspect
 }
