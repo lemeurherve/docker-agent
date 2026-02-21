@@ -209,8 +209,8 @@ Test-CommandExists 'docker buildx'
 Test-CommandExists 'yq'
 
 if($target -eq 'docker-init') {
-    Get-DockerInfo
     Set-DockerIsolation $ImageType
+    Get-DockerInfo
 }
 
 foreach($agentType in $AgentTypes) {
