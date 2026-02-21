@@ -153,7 +153,7 @@ function Set-DockerIsolation($imageType) {
             Write-Host "This VM does not support nested virtualization with Hyper-V"
         } else {
             Write-Host "This VM supports nested virtualization with Hyper-V"
-            docker buildx create --name win-hyperv --driver docker --driver-opt isolation=hyperv --use
+            docker buildx create --name win-hyperv --driver docker-container --platform windows/amd64 --driver-opt isolation=hyperv --use
             $env:BUILDKIT_SANDBOX_ISOLATION="hyperv"
         }
     }
