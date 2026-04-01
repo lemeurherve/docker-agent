@@ -122,43 +122,6 @@ function Test-Image {
     return $failed
 }
 
-function Get-DockerInfo() {
-    # System information
-    Get-ComputerInfo | Select-Object OsName, OsBuildNumber, WindowsVersion
-    Get-WindowsFeature Containers | Out-String
-    docker info
-    docker buildx inspect
-    docker buildx ls
-}
-
-function Set-DockerIsolation($imageType) {
-    $windowsVersion = $ImageType.Split('-')[1]
-    switch ($windowsVersion) {
-        {$_ -match "ltsc2019|ltsc2022"} {
-            Write-Host " = Building legacy Windows images, Hyper-V isolation required"
-            $builder = "win-hyperv"
-        }
-        {$_ -match "ltsc2025"} {
-            Write-Host " = Building native Windows images, using process isolation"
-            $builder = "win-hyperv"
-        }
-        default {
-            Write-Host " = Building unknown Windows images, Hyper-V isolation required"
-            $builder = "win-hyperv"
-        }
-    }
-    if ($builder -eq "win-hyperv") {
-        $capable = (Get-ComputerInfo).HyperVRequirementVirtualizationFirmwareEnabled
-        if (-not $capable) {
-            Write-Host "This VM does not support nested virtualization with Hyper-V"
-        } else {
-            Write-Host "This VM supports nested virtualization with Hyper-V"
-            docker buildx create --name win-hyperv --driver docker-container --platform windows/amd64 --driver-opt isolation=hyperv --use
-            $env:BUILDKIT_SANDBOX_ISOLATION="hyperv"
-        }
-    }
-}
-
 function Initialize-DockerComposeFile {
     param (
         [String] $AgentType,
@@ -208,9 +171,9 @@ Test-CommandExists 'docker-compose'
 Test-CommandExists 'docker buildx'
 Test-CommandExists 'yq'
 
-if($target -eq 'docker-init') {
-    Set-DockerIsolation $ImageType
-    Get-DockerInfo
+if ($Target -eq 'docker-init') {
+    Write-Host '= INIT: docker info below'
+    docker info
 }
 
 foreach($agentType in $AgentTypes) {
