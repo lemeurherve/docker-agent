@@ -63,11 +63,11 @@ variable "ALPINE_SHORT_TAG" {
 }
 
 variable "DEBIAN_RELEASE" {
-  default = "trixie-20260202"
+  default = "trixie-20260316"
 }
 
 variable "UBI9_TAG" {
-  default = "9.7-1771346757"
+  default = "9.7-1774415752"
 }
 
 # Set this value to a specific Windows version to override Windows versions to build returned by windowsversions function
@@ -240,8 +240,8 @@ function "alpine_platforms" {
 function "debian_platforms" {
   params = [jdk]
   result = (equal(17, jdk)
-    ? ["linux/amd64", "linux/arm64", "linux/ppc64le", "linux/arm/v7"]
-  : ["linux/amd64", "linux/arm64", "linux/ppc64le", "linux/s390x"])
+    ? ["linux/amd64", "linux/arm64", "linux/ppc64le", "linux/arm/v7", "linux/riscv64"]
+  : ["linux/amd64", "linux/arm64", "linux/ppc64le", "linux/s390x", "linux/riscv64"])
 }
 
 # Return array of Windows version(s) to build
