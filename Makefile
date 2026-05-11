@@ -30,8 +30,8 @@ export ARCH ?= $(shell \
 ##### Macros
 ## Check the presence of a CLI in the current PATH
 check_cli = type "$(1)" >/dev/null 2>&1 || { echo "Error: command '$(1)' required but not found. Exiting." ; exit 1 ; }
-## Check if a given image exists in the current manifest docker-bake.hcl
-check_image = make --silent list | grep -w '$(1)' >/dev/null 2>&1 || { echo "Error: the image '$(1)' does not exist in manifest for the current platform '$(OS)/$(ARCH)'. Please check the output of 'make list'. Exiting." ; exit 1 ; }
+## Check if a given image or group exists in the current manifest docker-bake.hcl
+check_image = $(MAKE) --silent list listgroup-all | grep -w '$(1)' >/dev/null 2>&1 || { echo "Error: the image or group '$(1)' does not exist in manifest for the current platform '$(OS)/$(ARCH)'. Please check the output of '$(MAKE) list' or '$(MAKE) listgroup-all'. Exiting." ; exit 1 ; }
 ## Base "docker buildx base" command to be reused everywhere
 bake_base_cli := docker buildx bake --file docker-bake.hcl
 ## Command to be used on build (only)
@@ -40,7 +40,7 @@ bake_cli := $(bake_base_cli) --load
 bake_default_target := all
 
 .PHONY: build
-.PHONY: test test-alpine test-debian
+.PHONY: test
 
 check-reqs:
 ## Build requirements
@@ -77,7 +77,7 @@ shellcheck:
 
 # Build all targets with the current OS and architecture
 build: check-reqs target showarch-$(ARCH)
-	@set -x; $(bake_cli) --metadata-file=target/build-result-metadata_$(bake_default_target).json --set '*.platform=$(OS)/$(ARCH)' $(shell make --silent list)
+	@set -x; $(bake_cli) --metadata-file=target/build-result-metadata_$(bake_default_target).json --set '*.platform=$(OS)/$(ARCH)' $(shell $(MAKE) --silent list)
 
 # Build a specific target with the current OS and architecture
 build-%: check-reqs target show-%
@@ -95,7 +95,7 @@ multiarchbuild-%: check-reqs show-%
 
 # Show all default targets
 show:
-	@set -x; make --silent show-$(bake_default_target)
+	@set -x; $(MAKE) --silent show-$(bake_default_target)
 
 # Show a specific target
 show-%:
@@ -103,31 +103,31 @@ show-%:
 
 # Show all targets depending on the architecture
 showarch-%:
-	@set -x; make --silent show | jq --arg arch "$(OS)/$*" '.target |= with_entries(select(.value.platforms | index($$arch)))'
+	@set -x; $(MAKE) --silent show | jq --arg arch "$(OS)/$*" '.target |= with_entries(select(.value.platforms | index($$arch)))'
 
 # List tags of all default targets
 tags:
-	@set -x; make --silent tags-$(bake_default_target)
+	@set -x; $(MAKE) --silent tags-$(bake_default_target)
 
 # List tags of a specific target
 tags-%:
-	@set -x; make --silent show-$* | jq -r '.target | to_entries[] | .key as $$name | .value.tags[] | "\(.) (\($$name))"' | LC_ALL=C sort -u
+	@set -x; $(MAKE) --silent show-$* | jq -r '.target | to_entries[] | .key as $$name | .value.tags[] | "\(.) (\($$name))"' | LC_ALL=C sort -u
 
 # Return the list of targets depending on the current OS and architecture
 list: check-reqs
-	@set -x; make --silent listarch-$(ARCH)
+	@set -x; $(MAKE) --silent listarch-$(ARCH)
 
 # Return the list of targets of a specific "target" (can be a docker bake group)
 list-%: check-reqs
-	@set -x; make --silent show-$* | jq -r '.target | keys[]'
+	@set -x; $(MAKE) --silent show-$* | jq -r '.target | keys[]'
 
 # Return the list of targets depending on the current OS and architecture
 listarch-%: check-reqs
-	@set -x; make --silent showarch-$* | jq -r '.target | keys[]'
+	@set -x; $(MAKE) --silent showarch-$* | jq -r '.target | keys[]'
 
 # Return the list of targets of a specific bake group
 listgroup-%: check-reqs
-	@set -x; make --silent show-$* | jq -r '.group | keys[]' | grep -v -e $* -e default
+	@set -x; $(MAKE) --silent show-$* | jq -r '.group | keys[]' | grep -v -e $* -e default
 
 # Ensure bats exists in the current folder
 bats:
@@ -143,7 +143,7 @@ target:
 
 # Publish all targets corresponding to the current OS
 publish:
-	@set -x; make --silent publish-$(OS)
+	@set -x; $(MAKE) --silent publish-$(OS)
 
 # Publish a specific "target" (can be a docker bake group)
 publish-%: target show-%
@@ -170,18 +170,35 @@ test-%: prepare-test
 # Check that the image exists in the manifest
 	@$(call check_image,$*)
 # Ensure that the image is built
-	@set -x; make --silent build-$*
+	@set -x; $(MAKE) --silent build-$*
+	@set -x; $(MAKE) --silent _test-dispatch TARGET=$*
+
+# Dispatch the test depending if it's a bake target or a group
+_test-dispatch:
+	@set -x; if $(MAKE) --silent listgroup-linux | grep -w "$(TARGET)" >/dev/null 2>&1; then \
+		$(MAKE) --silent _test-group TARGET=$(TARGET); \
+	else \
+		$(MAKE) --silent _test-image TARGET=$(TARGET); \
+	fi
+
+# Test a group by iterating on its targets
+_test-group:
+	@set -x; $(MAKE) --silent list-$(TARGET) | while read image; do $(MAKE) --silent test-$$image; done
+
+# Test an image
+_test-image:
+	@echo "Testing $(TARGET)"
 # Show bats version
 	@set -x; bats/bin/bats --version
 # Each type of image ("agent" or "inbound-agent") has its own tests suite
 ifeq ($(CI), true)
 # Execute the test harness and write result to a TAP file
-	IMAGE=$* bats/bin/bats $(CURDIR)/tests/tests_$(shell echo $* |  cut -d "_" -f 1).bats $(bats_flags) --formatter junit | tee target/junit-results-$*.xml
+	IMAGE=$(TARGET) bats/bin/bats $(CURDIR)/tests/tests_$(shell echo $(TARGET) |  cut -d "_" -f 1).bats $(bats_flags) --formatter junit | tee target/junit-results-$(TARGET).xml
 else
 # Execute the test harness
-	IMAGE=$* bats/bin/bats $(CURDIR)/tests/tests_$(shell echo $* |  cut -d "_" -f 1).bats $(bats_flags) --timing
+	IMAGE=$(TARGET) bats/bin/bats $(CURDIR)/tests/tests_$(shell echo $(TARGET) |  cut -d "_" -f 1).bats $(bats_flags) --formatter pretty --timing
 endif
 
-# Test targets depending on the current architecture
+# Test all targets depending on the current OS and architecture
 test:
-	@set -x; make --silent list | while read image; do make --silent "test-$${image}"; done
+	@set -x; $(MAKE) --silent test-$(OS)

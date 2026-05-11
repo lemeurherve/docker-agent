@@ -15,15 +15,15 @@ variable "jdks_in_preview" {
 }
 
 variable "JAVA17_VERSION" {
-  default = "17.0.18_8"
+  default = "17.0.19_10"
 }
 
 variable "JAVA21_VERSION" {
-  default = "21.0.10_7"
+  default = "21.0.11_10"
 }
 
 variable "JAVA25_VERSION" {
-  default = "25.0.2_10"
+  default = "25.0.3_9"
 }
 
 variable "REMOTING_VERSION" {
@@ -55,7 +55,7 @@ variable "ON_TAG" {
 }
 
 variable "ALPINE_FULL_TAG" {
-  default = "3.23.3"
+  default = "3.23.4"
 }
 
 variable "ALPINE_SHORT_TAG" {
@@ -63,11 +63,11 @@ variable "ALPINE_SHORT_TAG" {
 }
 
 variable "DEBIAN_RELEASE" {
-  default = "trixie-20260316"
+  default = "trixie-20260505"
 }
 
 variable "UBI9_TAG" {
-  default = "9.7-1774415752"
+  default = "9.7-1778044007"
 }
 
 # Set this value to a specific Windows version to override Windows versions to build returned by windowsversions function

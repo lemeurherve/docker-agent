@@ -1,4 +1,4 @@
-ARG UBI9_TAG=9.7-1774415752
+ARG UBI9_TAG=9.7-1778044007
 FROM registry.access.redhat.com/ubi9/ubi:"${UBI9_TAG}" AS jre-build
 
 SHELL ["/bin/bash", "-e", "-u", "-o", "pipefail", "-c"]
@@ -10,7 +10,7 @@ ARG TARGETPLATFORM
 COPY adoptium-get-jdk-link.sh /usr/bin/local/adoptium-get-jdk-link.sh
 COPY adoptium-install-jdk.sh /usr/bin/local/adoptium-install-jdk.sh
 
-ARG JAVA_VERSION=17.0.18_8
+ARG JAVA_VERSION=17.0.19_10
 
 # hadolint ignore=DL3041
 RUN dnf install --disableplugin=subscription-manager --setopt=install_weak_deps=0 --setopt=tsflags=nodocs --allowerasing -y \

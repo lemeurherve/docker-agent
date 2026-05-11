@@ -16,7 +16,7 @@ def agentSelector(String imageType, retryCounter) {
 
         // All other Windows images
         case ~/(nanoserver|windowsservercore).*/:
-            platform = 'infratest-windows'
+            platform = 'windows-2025'
             break
 
         // Linux
@@ -49,26 +49,25 @@ if (env.TAG_NAME) {
 }
 
 // Specify parallel stages
-// Linux: bake group(s) or target(s)
+// Linux: bake group(s) or target(s), see 'make list' or 'make listgroup-linux' output
 // Windows: flavor and version to build
 def parallelStages = [failFast: false]
 [
-    // 'linux',
-    // 'nanoserver-ltsc2019',
+    // 'alpine',
+    // 'debian',
+    // 'rhel_ubi9',
+    'nanoserver-ltsc2019',
     'nanoserver-ltsc2022',
     // 'windowsservercore-ltsc2019',
     'windowsservercore-ltsc2022'
 ].each { imageType ->
     parallelStages[imageType] = {
-        // Only bake targets can be specified with build-%, test-% and publish-% make targets
-        def makeTargetSuffix= (imageType.startsWith('agent_') || imageType.startsWith('inbound-agent_')) ? "-${imageType}" : ''
         withEnv([
             "ON_TAG=${tagWithOneDashExist}",
             "REMOTING_VERSION=${remotingVersion}",
             "BUILD_NUMBER=${buildNumber}",
             "IMAGE_TYPE=${imageType}",
-            "REGISTRY_ORG=${infra.isTrusted() ? 'jenkins' : 'jenkins4eval'}",
-            "MAKE_TARGET_SUFFIX=${makeTargetSuffix}"
+            "REGISTRY_ORG=${infra.isTrusted() ? 'jenkins' : 'jenkins4eval'}"
         ]) {
             int retryCounter = 0
             retry(count: 2, conditions: [agent(), nonresumable()]) {
@@ -99,7 +98,7 @@ def parallelStages = [failFast: false]
                             // Build current arch for Linux images
                             stage('Build current arch') {
                                 if (isUnix()) {
-                                    sh 'make "build${MAKE_TARGET_SUFFIX}"'
+                                    sh 'make "build-${IMAGE_TYPE}"'
                                 } else {
                                     // No multiarch Windows images
                                     powershell './make.ps1 build'
@@ -108,7 +107,7 @@ def parallelStages = [failFast: false]
 
                             stage('Test') {
                                 if (isUnix()) {
-                                    sh 'make "test${MAKE_TARGET_SUFFIX}"'
+                                    sh 'make "test-${IMAGE_TYPE}"'
                                 } else {
                                     powershell './make.ps1 test'
                                 }
@@ -121,7 +120,7 @@ def parallelStages = [failFast: false]
                         // then we build all the CPU architectures
                         stage('Build multiarch') {
                             if (isUnix()) {
-                                sh 'make "multiarchbuild${MAKE_TARGET_SUFFIX}"'
+                                sh 'make "multiarchbuild-${IMAGE_TYPE}"'
                             } else {
                                 // No multiarch images for Windows, (re)building them here on both controllers
                                 powershell './make.ps1 build'
@@ -139,7 +138,7 @@ def parallelStages = [failFast: false]
                                 infra.withDockerCredentials {
                                     if (isUnix()) {
                                         if (imageType != 'linux') {
-                                            sh 'make "publish${MAKE_TARGET_SUFFIX}"'
+                                            sh 'make "publish-${IMAGE_TYPE}"'
                                         } else {
                                             // Batch Linux images publication by distribution to avoid 429 rate limit errors from Docker Hub
                                             sh 'make listgroup-linux | xargs -I {} make "publish-{}"'
