@@ -54,19 +54,15 @@ if (env.TAG_NAME) {
 }
 
 // Specify parallel stages
-// Linux: bake group(s) or target(s), see 'make list' or 'make listgroup-linux' output
-// Note: splitting Debian targets to avoid 429 rate limit errors from Docker Hub
+// Linux: bake group(s) or target(s)
+//  - see 'make list' or 'make listgroup-linux' output
+//  - to replay a specific target instead of a group, specify its name (ex: inbound-agent_debian_jdk17)
 // Windows: flavor and version to build
 def parallelStages = [failFast: false]
 [
     'alpine',
     'rhel_ubi9',
-    'agent_debian_jdk17',
-    'agent_debian_jdk21',
-    'agent_debian_jdk25',
-    'inbound-agent_debian_jdk17',
-    'inbound-agent_debian_jdk21',
-    'inbound-agent_debian_jdk25',
+    'debian',
     'nanoserver-ltsc2019',
     'nanoserver-ltsc2022',
     'windowsservercore-ltsc2019',
@@ -87,66 +83,66 @@ def parallelStages = [failFast: false]
                 retryCounter++
                 node(resolvedAgentLabel) {
                     timeout(time: 60, unit: 'MINUTES') {
-                        checkout scm
-                        stage("Prepare Docker on ${resolvedAgentLabel}") {
-                            if (isUnix()) {
-                                sh 'make docker-init'
-                            } else {
-                                powershell './make.ps1 docker-init'
-                                archiveArtifacts artifacts: 'build-windows_*.yaml', allowEmptyArchive: true
-                            }
-                        }
-
-                        if (isUnix()) {
-                            stage('Checks') {
-                                sh 'make hadolint'
-                                sh 'make shellcheck'
-                            }
-                        }
-
-                        // No single arch build or test on trusted.ci.jenkins.io
-                        if (!infra.isTrusted()) {
-                            // Build current arch for Linux images
-                            stage('Build current arch') {
+                        // This function is defined in the jenkins-infra/pipeline-library
+                        infra.withDockerCredentials {
+                            checkout scm
+                            stage("Prepare Docker on ${resolvedAgentLabel}") {
                                 if (isUnix()) {
-                                    sh 'make "build-${IMAGE_TYPE}"'
+                                    sh 'make docker-init'
                                 } else {
-                                    // No multiarch Windows images
+                                    powershell './make.ps1 docker-init'
+                                    archiveArtifacts artifacts: 'build-windows_*.yaml', allowEmptyArchive: true
+                                }
+                            }
+
+                            if (isUnix()) {
+                                stage('Checks') {
+                                    sh 'make hadolint'
+                                    sh 'make shellcheck'
+                                }
+                            }
+
+                            // No single arch build or test on trusted.ci.jenkins.io
+                            if (!infra.isTrusted()) {
+                                // Build current arch for Linux images
+                                stage('Build current arch') {
+                                    if (isUnix()) {
+                                        sh 'make "build-${IMAGE_TYPE}"'
+                                    } else {
+                                        // No multiarch Windows images
+                                        powershell './make.ps1 build'
+                                    }
+                                }
+
+                                stage('Test') {
+                                    if (isUnix()) {
+                                        sh 'make "test-${IMAGE_TYPE}"'
+                                    } else {
+                                        powershell './make.ps1 test'
+                                    }
+                                    junit(allowEmptyResults: true, keepLongStdio: true, testResults: 'target/**/junit-results*.xml')
+                                }
+                                archiveArtifacts artifacts: 'target/build-result-metadata_*.json', allowEmptyArchive: true
+                            }
+
+                            // If the tests are passing for Linux AMD64 or if we're on trusted.ci.jenkins.io
+                            // then we build all the CPU architectures
+                            stage('Build multiarch') {
+                                if (isUnix()) {
+                                    sh 'make "multiarchbuild-${IMAGE_TYPE}"'
+                                } else {
+                                    // No multiarch images for Windows, (re)building them here on both controllers
                                     powershell './make.ps1 build'
                                 }
+                                archiveArtifacts artifacts: 'target/build-result-metadata_*.json', allowEmptyArchive: true
                             }
 
-                            stage('Test') {
-                                if (isUnix()) {
-                                    sh 'make "test-${IMAGE_TYPE}"'
-                                } else {
-                                    powershell './make.ps1 test'
-                                }
-                                junit(allowEmptyResults: true, keepLongStdio: true, testResults: 'target/**/junit-results*.xml')
-                            }
-                            archiveArtifacts artifacts: 'target/build-result-metadata_*.json', allowEmptyArchive: true
-                        }
-
-                        // If the tests are passing for Linux AMD64 or if we're on trusted.ci.jenkins.io
-                        // then we build all the CPU architectures
-                        stage('Build multiarch') {
-                            if (isUnix()) {
-                                sh 'make "multiarchbuild-${IMAGE_TYPE}"'
-                            } else {
-                                // No multiarch images for Windows, (re)building them here on both controllers
-                                powershell './make.ps1 build'
-                            }
-                            archiveArtifacts artifacts: 'target/build-result-metadata_*.json', allowEmptyArchive: true
-                        }
-
-                        // trusted.ci.jenkins.io builds (e.g. publication to DockerHub)
-                        if (infra.isTrusted()) {
-                            stage('Deploy to DockerHub') {
-                                if (!tagWithOneDashExist) {
-                                    error("The deployment to Docker Hub failed because the tag doesn't contain any '-'.")
-                                }
-                                // This function is defined in the jenkins-infra/pipeline-library
-                                infra.withDockerCredentials {
+                            // trusted.ci.jenkins.io builds (e.g. publication to DockerHub)
+                            if (infra.isTrusted()) {
+                                stage('Deploy to DockerHub') {
+                                    if (!tagWithOneDashExist) {
+                                        error("The deployment to Docker Hub failed because the tag doesn't contain any '-'.")
+                                    }
                                     if (isUnix()) {
                                         if (imageType != 'linux') {
                                             sh 'make "publish-${IMAGE_TYPE}"'
@@ -157,8 +153,8 @@ def parallelStages = [failFast: false]
                                     } else {
                                         powershell './make.ps1 publish'
                                     }
+                                    archiveArtifacts artifacts: 'target/build-result-metadata_*.json', allowEmptyArchive: true
                                 }
-                                archiveArtifacts artifacts: 'target/build-result-metadata_*.json', allowEmptyArchive: true
                             }
                         }
                     }
