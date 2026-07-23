@@ -31,6 +31,15 @@ sources:
       - replacer:
           from: "+"
           to: "_"
+  windows_x64_installer_url:
+    name: Retrieve the latest Installer URL (ZIP) for Windows x64
+    kind: temurin
+    spec:
+      architecture: x64
+      featureversion: 17
+      operatingsystem: windows
+      releasetype: ga
+      result: installer_url
 
 conditions:
   checkTemurinAllReleases:
@@ -71,6 +80,15 @@ targets:
       instruction:
         keyword: ARG
         matcher: JAVA_VERSION
+    scmid: default
+  setJDK17WindowsInstallerUrl:
+    name: Bump JDK17 Installer URL for Windows x64
+    kind: json
+    sourceid: windows_x64_installer_url
+    spec:
+      file: docker-bake.override.json
+      engine: dasel/v2
+      key: variable.jdk_installer_urls.default.windows.amd64.17
     scmid: default
   setJDK17VersionReadme:
     name: "Bump JDK17 version in README.md file"
