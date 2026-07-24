@@ -131,7 +131,7 @@ listgroup-%: check-reqs
 
 # Ensure bats exists in the current folder
 bats:
-	git clone --branch v1.13.0 https://github.com/bats-core/bats-core ./bats
+	git clone --branch v1.14.0 https://github.com/bats-core/bats-core ./bats
 
 # Ensure all bats submodules are up to date
 prepare-test: bats check-reqs target
