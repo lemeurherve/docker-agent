@@ -98,7 +98,7 @@ Describe "[$global:IMAGE_NAME] image starts jenkins-agent.ps1 correctly (slow te
         $exitCode, $stdout, $stderr = Run-Program 'docker' 'wait ncat-helper'
         $exitCode, $stdout, $stderr = Run-Program 'docker' 'logs ncat-helper'
         $exitCode | Should -Be 0
-        $stdout | Should -Match "GET /tcpSlaveAgentListener/ HTTP/1.1`r"
+        $stdout | Should -Match "GET /tcpSlaveAgentListener/ HTTP/1.1"
     }
 
     AfterAll {
