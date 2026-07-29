@@ -29,7 +29,7 @@ FROM mcr.microsoft.com/windows/servercore:"${WINDOWS_VERSION_TAG}" AS jdk-core
 # $ProgressPreference: https://github.com/PowerShell/PowerShell/issues/2138#issuecomment-251261324
 SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
 
-ARG JAVA_HOME="C:\openjdk-17"
+ARG JAVA_HOME
 ARG JAVA_ZIP_URL="Provided by docker-bake.hcl"
 ARG jdkTemp="C:\jdktemp"
 ARG localArchive="${jdkTemp}\jdk.zip"
@@ -43,7 +43,7 @@ RUN New-Item -ItemType Directory -Path $env:jdkTemp | Out-Null ; `
 ## Agent image target
 FROM mcr.microsoft.com/windows/servercore:"${WINDOWS_VERSION_TAG}" AS agent
 
-ARG JAVA_HOME="C:\openjdk-17"
+ARG JAVA_HOME
 ENV JAVA_HOME=${JAVA_HOME}
 
 COPY --from=jdk-core $JAVA_HOME $JAVA_HOME
