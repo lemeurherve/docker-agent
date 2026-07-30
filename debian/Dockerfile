@@ -31,7 +31,7 @@ ARG TARGETPLATFORM
 COPY adoptium-get-jdk-link.sh /usr/bin/local/adoptium-get-jdk-link.sh
 COPY adoptium-install-jdk.sh /usr/bin/local/adoptium-install-jdk.sh
 
-ARG JAVA_VERSION=17.0.19_10
+ARG JAVA_VERSION
 # hadolint ignore=DL3008
 RUN set -x; apt-get update \
   && apt-get install --no-install-recommends -y \
@@ -56,7 +56,6 @@ RUN java_major_version="$(jlink --version 2>&1 | cut -c1-2)"; \
     cp -r "/opt/jdk-${JAVA_VERSION}" /javaruntime; \
   else \
     case "$(jlink --version 2>&1 | cut -c1-2)" in \
-      "17") options="--compress=2 --add-modules ALL-MODULE-PATH" ;; \
       "21") options="--compress=zip-6 --add-modules ALL-MODULE-PATH" ;; \
       *) echo "ERROR: unmanaged jlink version pattern" && exit 1 ;; \
     esac; \

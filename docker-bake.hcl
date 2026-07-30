@@ -4,7 +4,7 @@ variable "agent_types_to_build" {
 }
 
 variable "jdks_to_build" {
-  default = [17, 21, 25]
+  default = [21, 25]
 }
 variable "default_jdk" {
   default = 21
@@ -12,10 +12,6 @@ variable "default_jdk" {
 
 variable "jdks_in_preview" {
   default = []
-}
-
-variable "JAVA17_VERSION" {
-  default = "17.0.19_10"
 }
 
 variable "JAVA21_VERSION" {
@@ -82,7 +78,6 @@ variable "WINDOWS_AGENT_TYPE_OVERRIDE" {
 
 variable "jdk_versions" {
   default = {
-    17 = JAVA17_VERSION
     21 = JAVA21_VERSION
     25 = JAVA25_VERSION
   }
@@ -104,7 +99,7 @@ target "alpine" {
     JAVA_VERSION = "${javaversion(jdk)}"
   }
   tags      = concat(linux_tags(type, jdk, "alpine"), linux_tags(type, jdk, "alpine${ALPINE_SHORT_TAG}"))
-  platforms = alpine_platforms(jdk)
+  platforms = ["linux/amd64", "linux/arm64"]
 }
 
 target "debian" {
@@ -122,7 +117,7 @@ target "debian" {
     JAVA_VERSION   = "${javaversion(jdk)}"
   }
   tags      = linux_tags(type, jdk, "debian")
-  platforms = debian_platforms(jdk)
+  platforms = ["linux/amd64", "linux/arm64", "linux/ppc64le", "linux/s390x", "linux/riscv64"]
 }
 
 target "rhel_ubi9" {
@@ -228,22 +223,6 @@ function "javaversion" {
 }
 
 ## Specific functions
-# Return an array of Alpine platforms to use depending on the jdk passed as parameter
-function "alpine_platforms" {
-  params = [jdk]
-  result = (equal(17, jdk)
-    ? ["linux/amd64"]
-  : ["linux/amd64", "linux/arm64"])
-}
-
-# Return an array of Debian platforms to use depending on the jdk passed as parameter
-function "debian_platforms" {
-  params = [jdk]
-  result = (equal(17, jdk)
-    ? ["linux/amd64", "linux/arm64", "linux/ppc64le", "linux/arm/v7", "linux/riscv64"]
-  : ["linux/amd64", "linux/arm64", "linux/ppc64le", "linux/s390x", "linux/riscv64"])
-}
-
 # Return array of Windows version(s) to build
 # Can be overriden by setting WINDOWS_VERSION_OVERRIDE to a specific Windows version
 # Ex: WINDOWS_VERSION_OVERRIDE=ltsc2025 docker buildx bake windows
@@ -273,7 +252,6 @@ function "toolsversion" {
 }
 
 # Return an array of RHEL UBI 9 platforms to use depending on the jdk passed as parameter
-# Note: Jenkins controller container image only supports jdk17 and jdk21 for ubi9
 function "rhel_ubi9_platforms" {
   params = [jdk]
   result = ["linux/amd64", "linux/arm64", "linux/ppc64le"]

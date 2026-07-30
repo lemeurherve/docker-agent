@@ -29,7 +29,7 @@ FROM mcr.microsoft.com/windows/servercore:"${WINDOWS_VERSION_TAG}" AS jdk-core
 # $ProgressPreference: https://github.com/PowerShell/PowerShell/issues/2138#issuecomment-251261324
 SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
 
-ARG JAVA_HOME="C:\openjdk-17"
+ARG JAVA_HOME
 ARG JAVA_ZIP_URL="Provided by docker-bake.hcl"
 ARG jdkTemp="C:\jdktemp"
 ARG localArchive="${jdkTemp}\jdk.zip"
@@ -45,7 +45,7 @@ FROM mcr.microsoft.com/powershell:nanoserver-"${TOOLS_WINDOWS_VERSION}" AS pwsh-
 ## Agent image target
 FROM mcr.microsoft.com/windows/nanoserver:"${WINDOWS_VERSION_TAG}" AS agent
 
-ARG JAVA_HOME="C:\openjdk-17"
+ARG JAVA_HOME
 ENV PSHOME="C:\Program Files\PowerShell"
 ENV PATH="C:\Windows\system32;C:\Windows;${PSHOME};"
 
