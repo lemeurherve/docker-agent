@@ -4,7 +4,7 @@ Param(
     # Default make.ps1 target
     [String] $Target = 'build',
     # Remoting version to include
-    [String] $RemotingVersion = '3355.v388858a_47b_33',
+    [String] $RemotingVersion = '3384.v60d89463d9e0',
     # Type of agent ("agent" or "inbound-agent")
     [String] $AgentType = '',
     # Windows flavor and windows version to build
@@ -89,7 +89,6 @@ function Test-Image {
     $items = $AgentTypeAndImageName.Split('|')
     $agentType = $items[0]
     $imageName = $items[1] -replace 'docker.io/', ''
-    $javaVersion = $items[2]
     $imageNameItems = $imageName.Split(':')
     $imageTag = $imageNameItems[1]
 
@@ -97,7 +96,6 @@ function Test-Image {
 
     $env:IMAGE_NAME = $imageName
     $env:VERSION = "$RemotingVersion"
-    $env:JAVA_VERSION = "$javaVersion"
 
     $targetPath = '.\target\{0}\{1}' -f $agentType, $imageTag
     if (Test-Path $targetPath) {
@@ -117,7 +115,6 @@ function Test-Image {
 
     Remove-Item env:\IMAGE_NAME
     Remove-Item env:\VERSION
-    Remove-Item env:\JAVA_VERSION
 
     return $failed
 }
@@ -193,7 +190,7 @@ function Initialize-DockerComposeFile {
     # - Use docker buildx bake to output image definitions from the "<windowsFlavor>" bake target
     # - Convert with yq to the format expected by docker compose
     # - Store the result in the docker compose file
-    docker buildx bake --progress=quiet --file=docker-bake.hcl $windowsFlavor --print |
+    docker buildx bake --progress=quiet --file=docker-bake.hcl --file docker-bake.override.json $windowsFlavor --print |
         yq --prettyPrint $yqMainQuery |
         yq $yqServicesQuery |
         Out-File -FilePath $DockerComposeFile
@@ -270,7 +267,7 @@ foreach($agentType in $AgentTypes) {
             $testFailed = $false
             $imageDefinitions = Invoke-Expression "$baseDockerCmd config" | yq --unwrapScalar --output-format json '.services' | ConvertFrom-Json
             foreach ($imageDefinition in $imageDefinitions.PSObject.Properties) {
-                $testFailed = $testFailed -or (Test-Image ('{0}|{1}|{2}' -f $agentType, $imageDefinition.Value.image, $imageDefinition.Value.build.args.JAVA_VERSION))
+                $testFailed = $testFailed -or (Test-Image ('{0}|{1}' -f $agentType, $imageDefinition.Value.image))
             }
 
             # Fail if any test failures

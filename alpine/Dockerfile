@@ -19,7 +19,7 @@
 #  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #  THE SOFTWARE.
-ARG ALPINE_TAG=3.23.4
+ARG ALPINE_TAG=3.24.1
 FROM alpine:"${ALPINE_TAG}" AS jre-build
 
 SHELL ["/bin/ash", "-eo", "pipefail", "-c"]
@@ -31,7 +31,7 @@ ARG TARGETPLATFORM
 COPY adoptium-get-jdk-link.sh /usr/bin/local/adoptium-get-jdk-link.sh
 COPY adoptium-install-jdk.sh /usr/bin/local/adoptium-install-jdk.sh
 
-ARG JAVA_VERSION=17.0.19_10
+ARG JAVA_VERSION
 # hadolint ignore=DL3018
 RUN apk add --no-cache \
     ca-certificates \
@@ -52,7 +52,6 @@ RUN java_major_version="$(jlink --version 2>&1 | cut -c1-2)"; \
     cp -r "/opt/jdk-${JAVA_VERSION}" /javaruntime; \
   else \
     case "$(jlink --version 2>&1 | cut -c1-2)" in \
-      "17") options="--compress=2 --add-modules ALL-MODULE-PATH" ;; \
       "21") options="--compress=zip-6 --add-modules ALL-MODULE-PATH" ;; \
       *) echo "ERROR: unmanaged jlink version pattern" && exit 1 ;; \
     esac; \
@@ -96,7 +95,7 @@ RUN apk add --no-cache \
       tzdata-utils \
     && rm -rf /tmp/*.apk /tmp/gcc /tmp/gcc-libs.tar* /tmp/libz /tmp/libz.tar.xz /var/cache/apk/*
 
-ARG VERSION=3355.v388858a_47b_33
+ARG VERSION=3384.v60d89463d9e0
 ADD --chown="${user}":"${group}" "https://repo.jenkins-ci.org/public/org/jenkins-ci/main/remoting/${VERSION}/remoting-${VERSION}.jar" /usr/share/jenkins/agent.jar
 RUN chmod 0644 /usr/share/jenkins/agent.jar \
   && ln -sf /usr/share/jenkins/agent.jar /usr/share/jenkins/slave.jar
