@@ -193,7 +193,7 @@ _test-image:
 # Each type of image ("agent" or "inbound-agent") has its own tests suite
 ifeq ($(CI), true)
 # Execute the test harness and write result to a TAP file
-	IMAGE=$(TARGET) bats/bin/bats $(CURDIR)/tests/tests_$(shell echo $(TARGET) |  cut -d "_" -f 1).bats $(bats_flags) --report-formatter junit --output target/ | tee target/junit-results-$(TARGET).xml
+	IMAGE=$(TARGET) bats/bin/bats $(CURDIR)/tests/tests_$(shell echo $(TARGET) |  cut -d "_" -f 1).bats $(bats_flags) --report-formatter junit --output target/
 	mv target/report.xml target/junit-results-$(TARGET).xml
 else
 # Execute the test harness
