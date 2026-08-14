@@ -123,7 +123,7 @@ def parallelStages = [failFast: false]
                                 } else {
                                     powershell './make.ps1 test'
                                 }
-                                junit(allowEmptyResults: false, keepLongStdio: true, testResults: 'target/**/junit-results*.xml')
+                                junit 'target/**/junit-results*.xml'
                             }
                             archiveArtifacts artifacts: 'target/build-result-metadata_*.json', allowEmptyArchive: true
                         }
