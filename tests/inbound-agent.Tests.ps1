@@ -2,7 +2,6 @@ Import-Module -DisableNameChecking -Force $PSScriptRoot/test_helpers.psm1
 
 $global:IMAGE_NAME = Get-EnvOrDefault 'IMAGE_NAME' '' # Ex: jenkins/inbound-agent:ltsc2022
 $global:VERSION = Get-EnvOrDefault 'VERSION' ''
-$global:JAVA_ZIP_URL = 'https://github.com/adoptium/temurin25-binaries/releases/download/jdk-25.0.3%2B9/OpenJDK25U-jdk_x64_windows_hotspot_25.0.3_9.zip'
 
 Write-Host "= TESTS: Preparing $global:IMAGE_NAME with Remoting $global:VERSION"
 
@@ -11,7 +10,7 @@ $GLOBAL:IMAGE_TAG = $imageItems[1]
 
 $items = $global:IMAGE_TAG.Split('-')
 # Remove the 'jdk' prefix (3 first characters)
-$global:JAVAMAJORVERSION = $items[0].Remove(0,3)
+$global:JAVARELEASE = $items[0].Remove(0,3)
 $global:WINDOWSFLAVOR = $items[1]
 $global:WINDOWSVERSIONTAG = $items[2]
 
@@ -36,7 +35,7 @@ CleanupNetwork('jnlp-network')
 
 Describe "[$global:IMAGE_NAME] build image" {
     It 'builds image' {
-        $exitCode, $stdout, $stderr = Run-Program 'docker' "build --build-arg `"VERSION=${global:VERSION}`" --build-arg `"JAVA_ZIP_URL=${global:JAVA_ZIP_URL}`" --build-arg `"JAVA_HOME=C:\openjdk-${global:JAVAMAJORVERSION}`" --build-arg `"WINDOWS_VERSION_TAG=${global:WINDOWSVERSIONTAG}`" --tag=${global:IMAGE_TAG} --file ./windows/${global:WINDOWSFLAVOR}/Dockerfile ."
+        $exitCode, $stdout, $stderr = Run-Program 'docker' "build --build-arg `"VERSION=${global:VERSION}`" --build-arg `"JAVA_RELEASE=${global:JAVARELEASE}`" --build-arg `"WINDOWS_VERSION_TAG=${global:WINDOWSVERSIONTAG}`" --tag=${global:IMAGE_TAG} --file ./windows/${global:WINDOWSFLAVOR}/Dockerfile ."
         $exitCode | Should -Be 0
     }
 }
@@ -112,13 +111,13 @@ Describe "[$global:IMAGE_NAME] custom build args" {
     BeforeAll {
         Push-Location -StackName 'agent' -Path "$PSScriptRoot/.."
         # Old version used to test overriding the build arguments.
-        # This old version must have the same tag suffixes as the current windows images (`-jdk25-nanoserver` etc.), and the same Windows version (2019, 2022, etc.)
+        # This old version must have the same tag suffixes as the current windows images (`-jdk25-nanoserver` etc.), and the same Windows version
         $TEST_VERSION = '3206.vb_15dcf73f6a_9'
         $customImageName = "custom-${global:IMAGE_NAME}"
     }
 
     It 'builds image with arguments' {
-        $exitCode, $stdout, $stderr = Run-Program 'docker' "build --build-arg `"VERSION=${TEST_VERSION}`" --build-arg `"JAVA_ZIP_URL=${global:JAVA_ZIP_URL}`" --build-arg `"JAVA_HOME=C:\openjdk-${global:JAVAMAJORVERSION}`" --build-arg `"WINDOWS_VERSION_TAG=${global:WINDOWSVERSIONTAG}`" --build-arg WINDOWS_FLAVOR=${global:WINDOWSFLAVOR} --build-arg CONTAINER_SHELL=${global:CONTAINERSHELL} --tag=${customImageName} --file=./windows/${global:WINDOWSFLAVOR}/Dockerfile ."
+        $exitCode, $stdout, $stderr = Run-Program 'docker' "build --build-arg `"VERSION=${TEST_VERSION}`" --build-arg `"JAVA_RELEASE=${global:JAVARELEASE}`" --build-arg `"WINDOWS_VERSION_TAG=${global:WINDOWSVERSIONTAG}`" --build-arg WINDOWS_FLAVOR=${global:WINDOWSFLAVOR} --build-arg CONTAINER_SHELL=${global:CONTAINERSHELL} --tag=${customImageName} --file=./windows/${global:WINDOWSFLAVOR}/Dockerfile ."
         $exitCode | Should -Be 0
 
         $exitCode, $stdout, $stderr = Run-Program 'docker' "run --detach --tty --name $global:CONTAINERNAME $customImageName -Cmd $global:CONTAINERSHELL"
@@ -139,7 +138,7 @@ Describe "[$global:IMAGE_NAME] custom build args" {
 }
 
 Describe "[$global:IMAGE_NAME] passing JVM options (slow test)" {
-    It "shows the java version ${global:JAVAMAJORVERSION} with --show-version" {
+    It "shows the java version ${global:JAVARELEASE} with --show-version" {
         $exitCode, $stdout, $stderr = Run-Program 'docker' 'network create --driver nat jnlp-network'
         Start-NcatContainer -windowsVersionTag $global:WINDOWSVERSIONTAG -networkName 'jnlp-network'
 
@@ -155,7 +154,7 @@ Describe "[$global:IMAGE_NAME] passing JVM options (slow test)" {
         Start-Sleep -Seconds 20
         $exitCode, $stdout, $stderr = Run-Program 'docker' "logs $global:CONTAINERNAME"
         $exitCode | Should -Be 0
-        $stdout | Should -Match "OpenJDK Runtime Environment Temurin-${global:JAVAMAJORVERSION}"
+        $stdout | Should -Match "OpenJDK Runtime Environment Temurin-${global:JAVARELEASE}"
     }
 
     AfterAll {

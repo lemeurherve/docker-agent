@@ -9,12 +9,7 @@ properties([
 def agentSelector(String imageType, retryCounter) {
     def platform
     switch (imageType) {
-        // nanoserver-ltsc2019 and windowservercore-ltsc2019
-        case ~/.*2019/:
-            platform = 'windows-2019'
-            break
-
-        // All other Windows images
+        // All Windows images
         case ~/(nanoserver|windowsservercore).*/:
             platform = 'windows-2025'
             break
@@ -36,7 +31,7 @@ def agentSelector(String imageType, retryCounter) {
 
 // Defaul values
 def tagWithOneDashExist = false
-def remotingVersion = '3384.v60d89463d9e0'
+def remotingVersion = '3386.v353e57a_1b_ea_0'
 def buildNumber = env.BUILD_NUMBER
 // Values on tag containing the remoting version and build number
 if (env.TAG_NAME) {
@@ -47,6 +42,9 @@ if (env.TAG_NAME) {
         buildNumber = tagItems[1]
     }
 }
+
+// Specify java release(s) to build for Windows images
+def windowsJavaReleases = [21, 25]
 
 // Specify parallel stages
 // Linux: bake group(s) or target(s), see 'make list' or 'make listgroup-linux' output
@@ -63,9 +61,7 @@ def parallelStages = [failFast: false]
     'inbound-agent_debian_jdk21',
     'inbound-agent_debian_jdk25',
     'rhel_ubi9',
-    'nanoserver-ltsc2019',
     'nanoserver-ltsc2022',
-    'windowsservercore-ltsc2019',
     'windowsservercore-ltsc2022',
 ].each { imageType ->
     parallelStages[imageType] = {
@@ -108,7 +104,11 @@ def parallelStages = [failFast: false]
                                     sh 'make "build-${IMAGE_TYPE}"'
                                 } else {
                                     // No multiarch Windows images
-                                    powershell './make.ps1 build'
+                                    windowsJavaReleases.each { javaRelease ->
+                                        withEnv(["JAVA_RELEASE_OVERRIDE=${javaRelease}"]) {
+                                            powershell './make.ps1 build -ImageType ${env:IMAGE_TYPE} -OverwriteDockerComposeFile'
+                                        }
+                                    }
                                 }
                             }
 
@@ -116,9 +116,13 @@ def parallelStages = [failFast: false]
                                 if (isUnix()) {
                                     sh 'make "test-${IMAGE_TYPE}"'
                                 } else {
-                                    powershell './make.ps1 test'
+                                    windowsJavaReleases.each { javaRelease ->
+                                        withEnv(["JAVA_RELEASE_OVERRIDE=${javaRelease}"]) {
+                                            powershell './make.ps1 test -ImageType ${env:IMAGE_TYPE} -OverwriteDockerComposeFile'
+                                        }
+                                    }
                                 }
-                                junit(allowEmptyResults: true, keepLongStdio: true, testResults: 'target/**/junit-results*.xml')
+                                junit 'target/**/junit-results*.xml'
                             }
                             archiveArtifacts artifacts: 'target/build-result-metadata_*.json', allowEmptyArchive: true
                         }
@@ -130,7 +134,11 @@ def parallelStages = [failFast: false]
                                 sh 'make "multiarchbuild-${IMAGE_TYPE}"'
                             } else {
                                 // No multiarch images for Windows, (re)building them here on both controllers
-                                powershell './make.ps1 build'
+                                windowsJavaReleases.each { javaRelease ->
+                                    withEnv(["JAVA_RELEASE_OVERRIDE=${javaRelease}"]) {
+                                        powershell './make.ps1 build -ImageType ${env:IMAGE_TYPE} -OverwriteDockerComposeFile'
+                                    }
+                                }
                             }
                             archiveArtifacts artifacts: 'target/build-result-metadata_*.json', allowEmptyArchive: true
                         }
@@ -151,7 +159,11 @@ def parallelStages = [failFast: false]
                                             sh 'make listgroup-linux | xargs -I {} make "publish-{}"'
                                         }
                                     } else {
-                                        powershell './make.ps1 publish'
+                                        windowsJavaReleases.each { javaRelease ->
+                                            withEnv(["JAVA_RELEASE_OVERRIDE=${javaRelease}"]) {
+                                                powershell './make.ps1 publish -ImageType ${env:IMAGE_TYPE} -OverwriteDockerComposeFile'
+                                            }
+                                        }
                                     }
                                 }
                                 archiveArtifacts artifacts: 'target/build-result-metadata_*.json', allowEmptyArchive: true
