@@ -205,7 +205,7 @@ function "windowsversions" {
   params = [flavor]
   result = (notequal(WINDOWS_VERSION_OVERRIDE, "")
     ? [WINDOWS_VERSION_OVERRIDE]
-  : ["ltsc2019", "ltsc2022"])
+  : ["ltsc2022"])
 }
 
 # Return array of agent type(s) to build
