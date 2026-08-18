@@ -55,7 +55,7 @@ variable "DEBIAN_RELEASE" {
 }
 
 variable "UBI9_TAG" {
-  default = "9.8-1786631889"
+  default = "9.8-1786985871"
 }
 
 # Set this value to a specific Windows version to override Windows versions to build returned by windowsversions function
@@ -76,8 +76,8 @@ variable "JAVA_RELEASE_OVERRIDE" {
 ## Targets
 target "alpine" {
   matrix = {
-    type          = agent_types_to_build
-    java_release  = java_releases(JAVA_RELEASE_OVERRIDE)
+    type         = agent_types_to_build
+    java_release = java_releases(JAVA_RELEASE_OVERRIDE)
   }
   name       = "${type}_alpine_jdk${java_release}"
   target     = type
@@ -94,8 +94,8 @@ target "alpine" {
 
 target "debian" {
   matrix = {
-    type          = agent_types_to_build
-    java_release  = java_releases(JAVA_RELEASE_OVERRIDE)
+    type         = agent_types_to_build
+    java_release = java_releases(JAVA_RELEASE_OVERRIDE)
   }
   name       = "${type}_debian_jdk${java_release}"
   target     = type
@@ -112,8 +112,8 @@ target "debian" {
 
 target "rhel_ubi9" {
   matrix = {
-    type          = agent_types_to_build
-    java_release  = java_releases(JAVA_RELEASE_OVERRIDE)
+    type         = agent_types_to_build
+    java_release = java_releases(JAVA_RELEASE_OVERRIDE)
   }
   name       = "${type}_rhel_ubi9_jdk${java_release}"
   target     = type
