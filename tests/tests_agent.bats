@@ -9,7 +9,7 @@ SUT_IMAGE=$(get_sut_image)
 
 ARCH=${ARCH:-x86_64}
 
-GIT_LFS_VERSION='3.7.1'
+GIT_LFS_VERSION='3.8.0'
 
 @test "[${SUT_IMAGE}] test version in docker metadata" {
   local expected_version
