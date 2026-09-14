@@ -34,6 +34,10 @@ variable "REGISTRY_REPO_INBOUND_AGENT" {
   default = "inbound-agent"
 }
 
+variable "REGISTRY_MIRROR_PREFIX" {
+  default = ""
+}
+
 variable "BUILD_NUMBER" {
   default = "1"
 }
@@ -84,9 +88,10 @@ target "alpine" {
   dockerfile = "alpine/Dockerfile"
   context    = "."
   args = {
-    ALPINE_TAG   = ALPINE_FULL_TAG
-    VERSION      = REMOTING_VERSION
-    JAVA_RELEASE = java_release
+    ALPINE_TAG             = ALPINE_FULL_TAG
+    VERSION                = REMOTING_VERSION
+    JAVA_RELEASE           = java_release
+    REGISTRY_MIRROR_PREFIX = REGISTRY_MIRROR_PREFIX
   }
   tags      = concat(linux_tags(type, java_release, "alpine"), linux_tags(type, java_release, "alpine${ALPINE_SHORT_TAG}"))
   platforms = ["linux/amd64", "linux/arm64"]
@@ -102,9 +107,10 @@ target "debian" {
   dockerfile = "debian/Dockerfile"
   context    = "."
   args = {
-    VERSION        = REMOTING_VERSION
-    DEBIAN_RELEASE = DEBIAN_RELEASE
-    JAVA_RELEASE   = java_release
+    VERSION                = REMOTING_VERSION
+    DEBIAN_RELEASE         = DEBIAN_RELEASE
+    JAVA_RELEASE           = java_release
+    REGISTRY_MIRROR_PREFIX = REGISTRY_MIRROR_PREFIX
   }
   tags      = linux_tags(type, java_release, "debian")
   platforms = ["linux/amd64", "linux/arm64", "linux/ppc64le", "linux/s390x", "linux/riscv64"]

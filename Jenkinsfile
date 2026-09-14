@@ -43,6 +43,9 @@ if (env.TAG_NAME) {
     }
 }
 
+// Docker Hub mirror for ci.jenkins.io
+def registryMirrorPrefix = 'https://k8s-hubmirro-hubmirro-477f7dfd76-9bbe4e560ee83036.elb.us-east-2.amazonaws.com:5000/v2/library/'
+
 // Specify java release(s) to build for Windows images
 def windowsJavaReleases = [21, 25]
 
@@ -72,7 +75,8 @@ def parallelStages = [failFast: false]
             "REMOTING_VERSION=${remotingVersion}",
             "BUILD_NUMBER=${buildNumber}",
             "IMAGE_TYPE=${imageType}",
-            "REGISTRY_ORG=${infra.isTrusted() ? 'jenkins' : 'jenkins4eval'}"
+            "REGISTRY_ORG=${infra.isTrusted() ? 'jenkins' : 'jenkins4eval'}",
+            "REGISTRY_MIRROR_PREFIX=${infra.isCiController() ? registryMirrorPrefix : ''}",
         ]) {
             int retryCounter = 0
             retry(count: 2, conditions: [agent(), nonresumable()]) {
