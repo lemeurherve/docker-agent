@@ -88,9 +88,9 @@ target "alpine" {
   dockerfile = "alpine/Dockerfile"
   context    = "."
   args = {
-    ALPINE_TAG             = ALPINE_FULL_TAG
     VERSION                = REMOTING_VERSION
     JAVA_RELEASE           = java_release
+    ALPINE_TAG             = ALPINE_FULL_TAG
     REGISTRY_MIRROR_PREFIX = REGISTRY_MIRROR_PREFIX
   }
   tags      = concat(linux_tags(type, java_release, "alpine"), linux_tags(type, java_release, "alpine${ALPINE_SHORT_TAG}"))
@@ -108,8 +108,8 @@ target "debian" {
   context    = "."
   args = {
     VERSION                = REMOTING_VERSION
-    DEBIAN_RELEASE         = DEBIAN_RELEASE
     JAVA_RELEASE           = java_release
+    DEBIAN_RELEASE         = DEBIAN_RELEASE
     REGISTRY_MIRROR_PREFIX = REGISTRY_MIRROR_PREFIX
   }
   tags      = linux_tags(type, java_release, "debian")
@@ -126,9 +126,9 @@ target "rhel_ubi9" {
   dockerfile = "rhel/ubi9/Dockerfile"
   context    = "."
   args = {
-    UBI9_TAG     = UBI9_TAG
     VERSION      = REMOTING_VERSION
     JAVA_RELEASE = java_release
+    UBI9_TAG     = UBI9_TAG
   }
   tags      = linux_tags(type, java_release, "rhel-ubi9")
   platforms = ["linux/amd64", "linux/arm64", "linux/ppc64le"]
@@ -145,8 +145,8 @@ target "nanoserver" {
   context    = "."
   args = {
     VERSION             = REMOTING_VERSION
-    WINDOWS_VERSION_TAG = windows_version
     JAVA_RELEASE        = java_release
+    WINDOWS_VERSION_TAG = windows_version
   }
   target    = type
   tags      = windows_tags(type, java_release, "nanoserver-${windows_version}")
@@ -163,8 +163,8 @@ target "windowsservercore" {
   dockerfile = "windows/windowsservercore/Dockerfile"
   context    = "."
   args = {
-    JAVA_RELEASE        = java_release
     VERSION             = REMOTING_VERSION
+    JAVA_RELEASE        = java_release
     WINDOWS_VERSION_TAG = windows_version
   }
   target    = type
